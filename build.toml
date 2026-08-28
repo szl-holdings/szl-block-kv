@@ -1,6 +1,14 @@
 [general]
 name = "szl_block_kv"
 hub = "SZLHOLDINGS/szl-block-kv"
+version = 1
+edition = 5
+license = "Apache-2.0"
 
+[general.hub]
+repo-id = "SZLHOLDINGS/szl-block-kv"
+
+# torch-noarch: labeled torch gather in v0. Do not set a triton kernel backend
+# (GPU page kernel is ROADMAP).
 [torch-noarch]
 src = "torch-ext/szl_block_kv"
