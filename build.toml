@@ -1,0 +1,6 @@
+[general]
+name = "szl_block_kv"
+hub = "SZLHOLDINGS/szl-block-kv"
+
+[torch-noarch]
+src = "torch-ext/szl_block_kv"
