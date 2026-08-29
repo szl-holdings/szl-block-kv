@@ -15,7 +15,8 @@ def test_selfcheck():
     assert r["ok"] is True
     assert r["path"] == "torch_gather"
     assert r["lambda"] == "Conjecture 1"
-    assert "ROADMAP" in r["note"]
+    assert "UNAVAILABLE" in r["note"]
+    assert "ROADMAP" not in r["note"]
     assert "no speedup" in r["note"].lower()
 
 

@@ -21,13 +21,16 @@ def test_card_honesty_phrases():
     card = (ROOT / "CARD.md").read_text(encoding="utf-8")
     for phrase in REQUIRED:
         assert phrase in card, f"missing from CARD.md: {phrase}"
+    assert "UNAVAILABLE" in card
+    assert "ROADMAP" not in card
 
 
 def test_readme_load_and_no_speedup():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert 'get_kernel("SZLHOLDINGS/szl-block-kv", revision="main", trust_remote_code=True)' in readme
     assert "No speedup claim" in readme
-    assert "ROADMAP" in readme
+    assert "UNAVAILABLE" in readme
+    assert "ROADMAP" not in readme
     assert "Copyright 2026 SZL Holdings" in readme
 
 
