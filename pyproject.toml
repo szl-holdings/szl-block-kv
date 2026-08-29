@@ -1,0 +1,17 @@
+[project]
+name = "szl-block-kv"
+version = "0.1.0"
+description = "Original SZL paged KV cache with block-table SHA3 receipts. PagedAttention silhouette, not a rehost."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [
+  { name = "Stephen P. Lutar Jr. / SZL Holdings" },
+]
+urls = { Homepage = "https://a-11-oy.com" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "kernels_ci: short correctness tests for kernel CI",
+]
