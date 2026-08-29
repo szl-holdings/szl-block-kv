@@ -17,7 +17,7 @@ Doctrine v11. **Λ = Conjecture 1 OPEN** (advisory; uniqueness unproven — not 
 
 GitHub bytes are the artifact. Hub is the publish mirror.
 
-v0 path: labeled **torch gather** by block table. GPU Triton page kernel is **ROADMAP**. **No speedup claim. No fabricated benchmark.**
+v0 path: labeled **torch gather** by block table. GPU Triton page kernel is **UNAVAILABLE**. **No speedup claim. No fabricated benchmark.**
 
 ## Load
 
