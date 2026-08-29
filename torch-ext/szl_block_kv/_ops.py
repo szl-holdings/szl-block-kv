@@ -45,7 +45,7 @@ def _gather_kv(cache: PagedCache, block_tables: torch.Tensor, context_lens: torc
 
 def paged_attn(q: torch.Tensor, cache: PagedCache, block_tables: torch.Tensor, context_lens: torch.Tensor,
               *, causal: bool = True, chain: Optional[ReceiptChain] = None, scale: Optional[float] = None) -> torch.Tensor:
-    """q: [B, H, Tq, D]. v0 torch gather; Triton page kernel is ROADMAP."""
+    """q: [B, H, Tq, D]. v0 torch gather; Triton page kernel is UNAVAILABLE."""
     k, v = _gather_kv(cache, block_tables, context_lens)
     # trim to max context for SDPA; pad positions stay zeros and must be masked
     b, h, tq, d = q.shape
@@ -82,4 +82,4 @@ def selfcheck() -> dict:
     ok = bool(err < 1e-5 and ok_c)
     return {"ok": ok, "max_abs_vs_contiguous": err, "chain_ok": ok_c, "chain_depth": depth,
             "path": "torch_gather", "lambda": "Conjecture 1",
-            "note": "v0 gather matches contiguous KV; Triton page kernel ROADMAP; no speedup claimed"}
+            "note": "v0 gather matches contiguous KV; Triton page kernel UNAVAILABLE; no speedup claimed"}
