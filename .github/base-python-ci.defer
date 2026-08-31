@@ -1,0 +1,1 @@
+tests/ imports the torch extension build; the base gate's minimal install cannot provide torch. The repo's CI builds and tests the extension with pinned toolchains. Ruff E9/F remains blocking here.
