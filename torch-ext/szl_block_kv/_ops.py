@@ -15,7 +15,7 @@ class PagedCache:
 
 def reshape_and_cache(k: torch.Tensor, v: torch.Tensor, cache: PagedCache, slot_mapping: torch.Tensor) -> None:
     """k,v: [T, H, D]; slot_mapping: [T] linear slot = block * block_size + offset."""
-    t = k.shape[0]
+    _ = k.shape[0]
     bs = cache.block_size
     slots = slot_mapping.long()
     blk = torch.div(slots, bs, rounding_mode="floor")

@@ -25,7 +25,6 @@ Lambda = Conjecture 1 OPEN.
 from __future__ import annotations
 
 import hashlib
-import json
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from ._chain import ReceiptChain, _canon, _sha3
