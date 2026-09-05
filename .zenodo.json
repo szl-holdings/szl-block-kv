@@ -1,0 +1,13 @@
+{
+  "title": "szl-block-kv — Triton paged KV cache with block-table SHA3 receipts",
+  "upload_type": "software",
+  "description": "Original SZL Triton paged KV cache with block-table SHA3 receipts. PagedAttention silhouette, not a rehost. Doctrine v11. Mirrors HF SZLHOLDINGS/szl-block-kv.",
+  "creators": [{"name": "Lutar, Stephen P., Jr."}],
+  "license": {"id": "Apache-2.0"},
+  "keywords": ["governed-ai", "kv-cache", "triton", "receipts", "szl-holdings"],
+  "related_identifiers": [
+    {"identifier": "10.5281/zenodo.19944926", "relation": "isSupplementTo", "scheme": "doi"},
+    {"identifier": "https://huggingface.co/SZLHOLDINGS/szl-block-kv", "relation": "isDocumentedBy", "scheme": "url"}
+  ],
+  "notes": "NEW work per the szl-papers deposit policy. Mint via GitHub release after enabling this repo in the owner's Zenodo account."
+}
