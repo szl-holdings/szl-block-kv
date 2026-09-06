@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "szl-block-kv — Triton paged KV cache with block-table SHA3 receipts"
+authors:
+  - family-names: Lutar
+    given-names: Stephen Paul
+license: Apache-2.0
+url: "https://huggingface.co/SZLHOLDINGS/szl-block-kv"
+repository-code: "https://github.com/szl-holdings/szl-block-kv"
