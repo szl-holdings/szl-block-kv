@@ -24,6 +24,7 @@ Lambda = Conjecture 1 OPEN.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -56,7 +57,11 @@ class InvariantBundle:
     def __init__(self, **fields: Any) -> None:
         if not fields:
             raise ValueError("an invariant bundle must not be empty")
-        self._fields: Dict[str, Any] = dict(fields)
+        # Snapshot nested caller-owned structures before deriving the identity.
+        # Otherwise a list/dict passed in here (or returned by ``fields``) could
+        # be mutated after construction while the bundle id remained frozen at
+        # the old value, breaking the invariant that the id names the regime.
+        self._fields: Dict[str, Any] = copy.deepcopy(dict(fields))
         self._id: str = _sha3(_canon(self._fields))
 
     @property
@@ -70,10 +75,11 @@ class InvariantBundle:
 
     @property
     def fields(self) -> Dict[str, Any]:
-        return dict(self._fields)
+        """Return a defensive snapshot of the fields named by this bundle id."""
+        return copy.deepcopy(self._fields)
 
     def derive(self, **overrides: Any) -> "InvariantBundle":
-        """A new bundle with fields changed. Always a different id."""
+        """Return a new bundle with the requested field overrides."""
         merged = dict(self._fields)
         merged.update(overrides)
         return InvariantBundle(**merged)
