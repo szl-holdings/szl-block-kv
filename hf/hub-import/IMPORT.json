@@ -1,0 +1,247 @@
+{
+  "schema": "szl.hf-hub-import.v1",
+  "generator": "scripts/hf_hub_import.py",
+  "method": "anonymous public Hub API (no token, read-only)",
+  "generated_at": "2026-09-29T15:20:59Z",
+  "compared_against": {
+    "git_head": "49a96b6386b8ea22db20810c8d96ac0ac7083970",
+    "tree": "working tree at generation time"
+  },
+  "path_map": {
+    "README.md": "CARD.md",
+    "build/<variant>/<module>/<file>": "torch-ext/<module>/<file>"
+  },
+  "targets": [
+    {
+      "repo_type": "kernel",
+      "repo_id": "SZLHOLDINGS/szl-block-kv",
+      "revision": "b5c514505f89f890474568091ad5cfc868e2b664",
+      "last_modified": "2026-08-29T16:01:03.000Z",
+      "card": {
+        "path": "hf/hub-import/kernel.README.md",
+        "blob_oid": "282996c148ee46cacc70e96c3b5a4592ba345c0c",
+        "sha256": "4650ea8f173d88d1f3aacf0b3cafd7030657fd1a721dc37a865508034dc02133",
+        "bytes": 4301,
+        "has_front_matter": false,
+        "line_endings": "crlf",
+        "source_url": "https://huggingface.co/kernels/SZLHOLDINGS/szl-block-kv/resolve/b5c514505f89f890474568091ad5cfc868e2b664/README.md"
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "oid": "6b7a283f6a9d189d65bccdb859c6f80016f52228",
+          "size": 127,
+          "github_path": ".gitattributes",
+          "status": "differs"
+        },
+        {
+          "path": "BENCH.laptop-blackwell.json",
+          "oid": "f351f676f677adc5ae301a6340f8efe1f331ada7",
+          "size": 5454,
+          "github_path": "BENCH.laptop-blackwell.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "OPERATIONAL.json",
+          "oid": "e856f19b41f70948f39e086499884ea9904ec2e6",
+          "size": 1925,
+          "github_path": "OPERATIONAL.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "README.md",
+          "oid": "282996c148ee46cacc70e96c3b5a4592ba345c0c",
+          "size": 4301,
+          "github_path": "CARD.md",
+          "status": "differs"
+        },
+        {
+          "path": "build/torch-cpu/metadata.json",
+          "oid": "ce5615fab08f4095ae89b04957fa13f8d04a0ab0",
+          "size": 264,
+          "github_path": "build/torch-cpu/metadata.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "build/torch-cpu/szl_block_kv/__init__.py",
+          "oid": "569c293aefc42218aa506d934e6ac1c162ac48b9",
+          "size": 284,
+          "github_path": "torch-ext/szl_block_kv/__init__.py",
+          "status": "differs"
+        },
+        {
+          "path": "build/torch-cpu/szl_block_kv/_chain.py",
+          "oid": "d26134fde7c99157f9c4e46ddbef01379806afe6",
+          "size": 1310,
+          "github_path": "torch-ext/szl_block_kv/_chain.py",
+          "status": "same"
+        },
+        {
+          "path": "build/torch-cpu/szl_block_kv/_ops.py",
+          "oid": "c701a9fd952453b87e684e073f97317a21cc3616",
+          "size": 4143,
+          "github_path": "torch-ext/szl_block_kv/_ops.py",
+          "status": "differs"
+        },
+        {
+          "path": "build/torch-universal/metadata.json",
+          "oid": "fe4aced510aedcd662726625dff92bb71615b266",
+          "size": 270,
+          "github_path": "build/torch-universal/metadata.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "build/torch-universal/szl_block_kv/__init__.py",
+          "oid": "569c293aefc42218aa506d934e6ac1c162ac48b9",
+          "size": 284,
+          "github_path": "torch-ext/szl_block_kv/__init__.py",
+          "status": "differs"
+        },
+        {
+          "path": "build/torch-universal/szl_block_kv/_chain.py",
+          "oid": "d26134fde7c99157f9c4e46ddbef01379806afe6",
+          "size": 1310,
+          "github_path": "torch-ext/szl_block_kv/_chain.py",
+          "status": "same"
+        },
+        {
+          "path": "build/torch-universal/szl_block_kv/_ops.py",
+          "oid": "c701a9fd952453b87e684e073f97317a21cc3616",
+          "size": 4143,
+          "github_path": "torch-ext/szl_block_kv/_ops.py",
+          "status": "differs"
+        }
+      ],
+      "summary": {
+        "files": 12,
+        "same": 2,
+        "differs": 6,
+        "hub_only": 4
+      },
+      "github_only": [
+        "torch-ext/szl_block_kv/_invariant.py"
+      ]
+    },
+    {
+      "repo_type": "model",
+      "repo_id": "SZLHOLDINGS/szl-block-kv",
+      "revision": "b5e86e4038e630eda94e3bd83cee1c5729d6d826",
+      "last_modified": "2026-09-24T21:57:27.000Z",
+      "card": {
+        "path": "hf/hub-import/model.README.md",
+        "blob_oid": "3882220828bf2552fe75ceaf099317b7a8570442",
+        "sha256": "f6105e4530f3394a40d8465118eda175d531c54bee612d05d82aa6c0569390bf",
+        "bytes": 6131,
+        "has_front_matter": true,
+        "line_endings": "lf",
+        "source_url": "https://huggingface.co/SZLHOLDINGS/szl-block-kv/resolve/b5e86e4038e630eda94e3bd83cee1c5729d6d826/README.md"
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "oid": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+          "size": 1519,
+          "github_path": ".gitattributes",
+          "status": "differs"
+        },
+        {
+          "path": "BENCH.laptop-blackwell.json",
+          "oid": "f351f676f677adc5ae301a6340f8efe1f331ada7",
+          "size": 5454,
+          "github_path": "BENCH.laptop-blackwell.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "LICENSE",
+          "oid": "be03f79d4ef224757dcad3564b780cb58efde543",
+          "size": 553,
+          "github_path": "LICENSE",
+          "status": "differs"
+        },
+        {
+          "path": "OPERATIONAL.json",
+          "oid": "e856f19b41f70948f39e086499884ea9904ec2e6",
+          "size": 1925,
+          "github_path": "OPERATIONAL.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "README.md",
+          "oid": "3882220828bf2552fe75ceaf099317b7a8570442",
+          "size": 6131,
+          "github_path": "CARD.md",
+          "status": "differs"
+        },
+        {
+          "path": "block_kv.py",
+          "oid": "02140e02e49d2c8bf693e7c067bd96ae13176371",
+          "size": 2989,
+          "github_path": "block_kv.py",
+          "status": "hub_only"
+        },
+        {
+          "path": "bom/model-bom.cdx.json",
+          "oid": "47444daec4d8db87725ed03f103a530af72cded3",
+          "size": 5410,
+          "github_path": "bom/model-bom.cdx.json",
+          "status": "hub_only"
+        },
+        {
+          "path": "build.toml",
+          "oid": "fb4d8b32df3bdac8bba321f4a11fe5d3750c50cb",
+          "size": 112,
+          "github_path": "build.toml",
+          "status": "differs"
+        },
+        {
+          "path": "chain.py",
+          "oid": "129f832f623507345c7a74f83a0181bd70724e7f",
+          "size": 5979,
+          "github_path": "chain.py",
+          "status": "hub_only"
+        },
+        {
+          "path": "og-card.png",
+          "oid": "46bbb67b160f1856084e973403a296fcdf4327d7",
+          "size": 32478,
+          "github_path": "og-card.png",
+          "status": "hub_only"
+        },
+        {
+          "path": "tests/test_block_kv.py",
+          "oid": "1a6197a1961e5b0ea2a22927f9a71a0df73f0321",
+          "size": 293,
+          "github_path": "tests/test_block_kv.py",
+          "status": "differs"
+        },
+        {
+          "path": "torch-ext/szl_block_kv/__init__.py",
+          "oid": "569c293aefc42218aa506d934e6ac1c162ac48b9",
+          "size": 284,
+          "github_path": "torch-ext/szl_block_kv/__init__.py",
+          "status": "differs"
+        },
+        {
+          "path": "torch-ext/szl_block_kv/_chain.py",
+          "oid": "d26134fde7c99157f9c4e46ddbef01379806afe6",
+          "size": 1310,
+          "github_path": "torch-ext/szl_block_kv/_chain.py",
+          "status": "same"
+        },
+        {
+          "path": "torch-ext/szl_block_kv/_ops.py",
+          "oid": "c701a9fd952453b87e684e073f97317a21cc3616",
+          "size": 4143,
+          "github_path": "torch-ext/szl_block_kv/_ops.py",
+          "status": "differs"
+        }
+      ],
+      "summary": {
+        "files": 14,
+        "same": 1,
+        "differs": 7,
+        "hub_only": 6
+      }
+    }
+  ]
+}
