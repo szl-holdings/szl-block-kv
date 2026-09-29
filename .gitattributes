@@ -1,0 +1,6 @@
+# Hugging Face card sources are byte-exact: CI compares CARD.md with its
+# rendering of hf/card.yaml, and hf/hub-import/ holds verbatim Hub bytes that
+# tests check by git blob id. Never convert their line endings.
+CARD.md text eol=lf
+hf/** text eol=lf
+hf/hub-import/** -text

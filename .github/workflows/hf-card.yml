@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 SZL Holdings
+# SPDX-License-Identifier: Apache-2.0
+#
+# Keeps CARD.md equal to its rendering of hf/card.yaml and lints it with the
+# shared SZL card toolkit (szl-holdings/.github hf-card, pinned by commit).
+# CARD.md is the card this repository will publish to both Hub twins (kernel
+# and model type). Read-only: no secrets, no Hub access. Publishing is the job
+# of a mirror workflow this repository does not have yet; see hf/README.md.
+name: hf-card
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hf-card-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  card:
+    name: card source in sync and lint-clean
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # hf-card as merged in szl-holdings/.github#801. Bump deliberately.
+      - name: Check out hf-card at the pinned commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: szl-holdings/.github
+          ref: 4579c55d8a9d03f6d5e24fd2ab17bcc947d4bcd3
+          path: .hf-card-toolkit
+          sparse-checkout: hf-card
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          check-latest: false
+
+      - name: Install the hf-card runtime (hash-locked)
+        run: >-
+          python -m pip install --disable-pip-version-check --require-hashes
+          --only-binary=:all: -r .hf-card-toolkit/hf-card/requirements.txt
+
+      - name: CARD.md is the rendering of hf/card.yaml
+        run: python .hf-card-toolkit/hf-card/render.py hf/card.yaml --out CARD.md --check
+
+      - name: CARD.md passes the card contract for both Hub twins
+        run: |
+          python .hf-card-toolkit/hf-card/lint.py CARD.md --type kernel
+          python .hf-card-toolkit/hf-card/lint.py CARD.md --type model

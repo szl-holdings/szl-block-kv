@@ -1,0 +1,137 @@
+# Hugging Face card source for both Hub twins of this repository (decision D9:
+# one source, one template): kernels/SZLHOLDINGS/szl-block-kv and the model-type
+# twin SZLHOLDINGS/szl-block-kv.
+#
+# Rendered with szl-holdings/.github hf-card at the commit pinned in
+# .github/workflows/hf-card.yml:
+#   python <hf-card>/render.py hf/card.yaml --out CARD.md
+# CARD.md is the committed rendering; CI fails when it drifts from this file.
+# Nothing in this repository writes the Hub yet: see hf/README.md.
+type: kernel
+repo_id: SZLHOLDINGS/szl-block-kv
+title: szl-block-kv
+summary: >-
+  **Original SZL construction in the paged-KV category.** Inspired by Kwon et al.
+  PagedAttention SOSP 2023 https://arxiv.org/abs/2309.06180.
+  **NOT a rehost of vLLM or kernels-community/paged-attention.**
+  **Distinct from a11oy MODELED H2O eviction.**
+  v0 is a labeled torch gather over a block table with SHA3-256 receipts.
+  The GPU Triton page kernel is **UNAVAILABLE**. No speedup claim.
+front_matter:
+  license: apache-2.0
+  library_name: kernels
+  tags:
+    - kernel
+    - paged-attention
+    - kv-cache
+    - provenance
+    - szl-holdings
+  szl:
+    source_repo: szl-holdings/szl-block-kv
+    proof_url: https://github.com/szl-holdings/szl-block-kv
+kernel:
+  backends:
+    - cpu (torch gather)
+  load: |
+    from kernels import get_kernel
+
+    kv = get_kernel("SZLHOLDINGS/szl-block-kv", revision="main", trust_remote_code=True)
+    print(kv.selfcheck())
+sections:
+  - heading: Doctrine
+    body: >-
+      Doctrine v11. **Λ = Conjecture 1 OPEN** (advisory; uniqueness unproven, not
+      proven trust). GitHub bytes are the artifact; the Hub is the publish mirror.
+  - heading: Invariant-keyed blocks
+    body: |
+      A paged-KV block addressed by its token content alone is reusable by any request
+      that presents the same tokens. That is arithmetically sound and governance-unsound:
+      a block computed while a permissive invariant bundle was in force can be served to
+      a request running under a stricter one, and nothing in the cache layer can see the
+      difference.
+
+      `InvariantKeyedBlockTable` makes the governance regime part of the address:
+
+      ```
+      block_key = SHA3-256( "szl.block-kv.invariant-key" || canonical(token_ids) || bundle_id )
+      ```
+
+      Same tokens under a different bundle produce a different key, so the lookup misses
+      and the block is recomputed under the regime that asked for it. There is no code
+      path that returns a block keyed to another bundle.
+
+      ```python
+      from szl_block_kv import InvariantBundle, InvariantKeyedBlockTable, ReceiptChain
+
+      permissive = InvariantBundle(doctrine="v11", policy_class="default-permissive",
+                                  receipts_required=True, verifier_budget=0)
+      strict = permissive.derive(policy_class="default-strict", verifier_budget=3)
+
+      chain = ReceiptChain()
+      table = InvariantKeyedBlockTable(num_blocks=1024, chain=chain)
+      run = [15496, 11, 995, 13]
+
+      table.lookup(run, permissive)      # (None, "miss_cold")
+      physical = table.admit(run, permissive)
+      table.lookup(run, permissive)      # (physical, "hit")
+      table.lookup(run, strict)          # (None, "miss_cross_regime")  <- containment
+      chain.verify()                     # (True, 4, -1)
+      ```
+
+      A cross-regime miss is reported distinctly from a cold miss, because the two mean
+      different things operationally: a cold miss is capacity or novelty, a cross-regime
+      miss is governance doing its job. `table.audit()` asserts structurally that no
+      physical block serves two regimes, and every lookup, admission, rejection, and
+      eviction is appended to the same SHA3-256 receipt chain as `paged_attn`.
+
+      Self-check: `from szl_block_kv import selfcheck_invariant; selfcheck_invariant()`
+  - heading: Local source tree
+    body: |
+      Put `torch-ext/` on `PYTHONPATH`, then:
+
+      ```python
+      from szl_block_kv import PagedCache, paged_attn, reshape_and_cache, selfcheck
+      print(selfcheck())
+      ```
+claims:
+  - label: MEASURED
+    claim: >-
+      Cross-regime containment. The 14 tests in `tests/test_invariant.py` cover canonical
+      bundle ids, domain separation against boundary confusion, hit vs cold miss vs
+      cross-regime miss, refusal to rebind a physical block across regimes, no physical
+      block serving two regimes (4 regimes x 3 runs), auditability across FIFO eviction,
+      and receipt-chain depth. CI runs them on every pull request and every push to
+      main (`kernel-smoke.yml`).
+      What-NOT: not a proof about attention arithmetic.
+    receipt: https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py
+  - label: MEASURED
+    claim: >-
+      Reuse fidelity under one regime. `test_reuse_under_the_same_regime_is_numerically_exact`
+      asserts that a served hit is `torch.equal` to recompute, and that both match
+      contiguous-KV SDPA within atol/rtol 1e-5 on float32.
+    receipt: https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py
+  - label: MEASURED
+    claim: >-
+      Paged gather correctness. `tests/test_block_kv.py` asserts that paged attention over
+      shuffled pages and over partial context lengths matches contiguous-KV SDPA within
+      atol/rtol 1e-5 on float32.
+    receipt: https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_block_kv.py
+  - label: REPORTED
+    claim: >-
+      CPU `get_kernel` load from the Kernel Hub (kernels 0.16.1, `build/torch-universal`
+      and `build/torch-cpu`, `selfcheck` ok) and a local pytest run, recorded 2026-08-29
+      in the Hub-only `BENCH.laptop-blackwell.json` and `OPERATIONAL.json` against source
+      commit 7cf99cca. No receipt for them is committed in this repository.
+  - label: UNAVAILABLE
+    claim: GPU Triton page kernel. It is not in v0; no cubin and no timed GPU run exist.
+  - label: UNAVAILABLE
+    claim: Eviction quality. v0 eviction is FIFO; no eviction-quality or hit-rate claim is made.
+  - label: UNAVAILABLE
+    claim: >-
+      Cost of keying. The hit-rate cost of narrowing the keyspace by bundle is not
+      measured here. Measure it on your own traffic before promotion.
+  - label: NOT_CLAIMED
+    claim: Any speed-up, tokens/s or energy figure.
+limits:
+  - Kernel, not weights. Not a drop-in vLLM replacement.
+  - Receipts prove integrity and declared origin only; they do not prove accuracy, readiness or performance.
