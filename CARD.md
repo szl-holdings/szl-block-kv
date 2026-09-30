@@ -27,9 +27,17 @@ szl:
 | Backends | cpu (torch gather) |
 
 ```python
+import re
+
+# Set only after owner qualification of this first-class Kernel Hub release.
+KERNEL_REVISION = "REPLACE_WITH_OWNER_QUALIFIED_KERNEL_COMMIT"
+if re.fullmatch(r"[0-9a-f]{40}", KERNEL_REVISION) is None:
+    raise ValueError("An owner-qualified immutable Kernel Hub commit is required")
+
+# This loads and executes remote Python code; review the pinned source first.
 from kernels import get_kernel
 
-kv = get_kernel("SZLHOLDINGS/szl-block-kv", revision="main", trust_remote_code=True)
+kv = get_kernel("SZLHOLDINGS/szl-block-kv", revision=KERNEL_REVISION, trust_remote_code=True)
 print(kv.selfcheck())
 ```
 
@@ -89,6 +97,21 @@ Put `torch-ext/` on `PYTHONPATH`, then:
 from szl_block_kv import PagedCache, paged_attn, reshape_and_cache, selfcheck
 print(selfcheck())
 ```
+
+## Source and Hub release scope
+
+Loading with `trust_remote_code=True` executes code from the selected first-class
+Kernel Hub repository. Review that immutable source and qualify a compatible
+`kernels` client before running it. Set `KERNEL_REVISION` to the owner-qualified
+Kernel Hub publication commit; this card does not establish one. A GitHub
+source commit or model-twin revision is not the provider revision. The syntax
+check in the example does not establish release qualification.
+
+This is staged GitHub card source, not evidence that the described build is
+currently published or qualified on either Hub twin. The imported Hub package predates the invariant-keyed source APIs described here. This staged card must be published together with a matching qualified build, never as a card-only update.
+
+Publication/import context is recorded in [hf/README.md](https://github.com/szl-holdings/szl-block-kv/blob/dd91c1ca2431b7d1ef65dbbb261b8b402605f111/hf/README.md).
+Historical Hub-only benchmark receipts remain REPORTED at their stated scope.
 
 ## Claims
 
