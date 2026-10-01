@@ -9,6 +9,7 @@ authors = [
   { name = "Stephen P. Lutar Jr. / SZL Holdings" },
 ]
 urls = { Homepage = "https://a-11-oy.com" }
+classifiers = ["Private :: Do Not Upload"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
