@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "torch-ext"))
 import torch
 import torch.nn.functional as F
 import pytest
+import szl_block_kv._ops as ops
 from szl_block_kv import PagedCache, ReceiptChain, paged_attn, reshape_and_cache, selfcheck
 
 
@@ -90,10 +91,11 @@ def test_cuda_skip_is_honest():
 
 
 @pytest.mark.parametrize("causal_kwargs", [{}, {"causal": True}])
-def test_causal_request_fails_closed_before_receipt(causal_kwargs):
+def test_causal_request_fails_closed_before_cache_read_or_receipt(causal_kwargs, monkeypatch):
     cache = PagedCache(num_blocks=1, block_size=2, n_heads=1, d_head=4)
     chain = ReceiptChain()
     q = torch.zeros(1, 1, 1, 4)
+    monkeypatch.setattr(ops, "_gather_kv", lambda *_args: pytest.fail("causal request read cache"))
     with pytest.raises(NotImplementedError, match="causal paged attention is unavailable"):
         paged_attn(q, cache, torch.tensor([[0]]), torch.tensor([1]), chain=chain, **causal_kwargs)
     assert len(chain) == 0
