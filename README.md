@@ -98,6 +98,30 @@ Self-check: `from szl_block_kv import selfcheck_invariant; selfcheck_invariant()
 | Eviction quality | **UNAVAILABLE** | v0 eviction is FIFO. No eviction-quality or hit-rate claim is made. |
 | Cost of keying | **UNAVAILABLE** | The hit-rate cost of narrowing the keyspace by bundle is not measured here. Measure it on your own traffic before promotion. |
 
+### Synthetic CPU cache-contract exercise
+
+From a reviewed Git checkout with Python, PyTorch and pytest already installed:
+
+```sh
+python scripts/bench_cache_contract.py --requests 10000 --unique-runs 128 --capacities 32 128 --seeds 0 1 2 3 4
+python -m pytest tests/test_cache_contract_bench.py -q
+```
+
+The script prints JSON with the exact local Git revision and dirty-source flag.
+It drives the real `InvariantKeyedBlockTable` through seeded lookup/admission and
+SHA3 receipt-chain verification. A deliberately unsafe **token-only toy FIFO**
+counts stale cross-regime hits on the same trace; it is not vLLM or a deployed
+cache and is not a like-for-like speed baseline. A separate CPU probe maps
+shuffled physical pages under two synthetic regimes and compares **explicitly
+noncausal** float32 paged gather with contiguous PyTorch SDPA at `1e-5`.
+The changed KV values are a counterexample, not a claim that every real policy
+change alters attention values.
+
+The emitted elapsed time covers Python table lookup/admission/receipt emission
+only. It does not time KV computation, real traffic, GPU kernels, model serving,
+tokens/s, joules, or the cost of keying in production. Synthetic hit rates are
+not promotion evidence. No novelty or speedup is claimed.
+
 **No speedup claim. Λ = Conjecture 1 OPEN.**
 
 ## Load
