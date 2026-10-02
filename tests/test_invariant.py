@@ -174,11 +174,11 @@ def test_reuse_under_the_same_regime_is_numerically_exact():
 
     table.admit(run[:bs], PERMISSIVE, physical=0)
     table.admit(run[bs:], PERMISSIVE, physical=1)
-    first = paged_attn(q, cache, tables, clens)
+    first = paged_attn(q, cache, tables, clens, causal=False)
 
     found, outcome = table.lookup(run[:bs], PERMISSIVE)
     assert (found, outcome) == (0, "hit")
-    second = paged_attn(q, cache, tables, clens)
+    second = paged_attn(q, cache, tables, clens, causal=False)
     assert torch.equal(first, second)
 
     k_ref = k.permute(1, 0, 2).unsqueeze(0)
