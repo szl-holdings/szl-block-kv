@@ -130,13 +130,14 @@ claims:
     claim: >-
       Reuse fidelity under one regime. `test_reuse_under_the_same_regime_is_numerically_exact`
       asserts that a served hit is `torch.equal` to recompute, and that both match
-      contiguous-KV SDPA within atol/rtol 1e-5 on float32.
+      noncausal contiguous-KV SDPA within atol/rtol 1e-5 on float32.
     receipt: https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py
   - label: MEASURED
     claim: >-
-      Paged gather correctness. `tests/test_block_kv.py` asserts that paged attention over
-      shuffled pages and over partial context lengths matches contiguous-KV SDPA within
-      atol/rtol 1e-5 on float32.
+      Noncausal paged gather correctness. `tests/test_block_kv.py` asserts that
+      paged attention over shuffled pages and over partial context lengths
+      matches contiguous-KV SDPA with `is_causal=False` within atol/rtol 1e-5
+      on float32. This evidence does not establish causal attention.
     receipt: https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_block_kv.py
   - label: REPORTED
     claim: >-

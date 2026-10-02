@@ -45,7 +45,17 @@ def _gather_kv(cache: PagedCache, block_tables: torch.Tensor, context_lens: torc
 
 def paged_attn(q: torch.Tensor, cache: PagedCache, block_tables: torch.Tensor, context_lens: torch.Tensor,
               *, causal: bool = True, chain: Optional[ReceiptChain] = None, scale: Optional[float] = None) -> torch.Tensor:
-    """q: [B, H, Tq, D]. v0 torch gather; Triton page kernel is UNAVAILABLE."""
+    """Noncausal v0 torch gather for q: [B, H, Tq, D].
+
+    Causal query positions are not defined by this API. The default causal=True
+    therefore fails closed instead of silently returning noncausal attention.
+    Triton page kernel is UNAVAILABLE.
+    """
+    if causal is not False:
+        raise NotImplementedError(
+            "causal paged attention is unavailable in v0; "
+            "pass causal=False only for noncausal attention"
+        )
     k, v = _gather_kv(cache, block_tables, context_lens)
     # trim to max context for SDPA; pad positions stay zeros and must be masked
     b, h, tq, d = q.shape
@@ -73,7 +83,7 @@ def selfcheck() -> dict:
     tables = torch.tensor([[0, 1, -1, -1]])
     clens = torch.tensor([t])
     chain = ReceiptChain()
-    y = paged_attn(q, cache, tables, clens, chain=chain)
+    y = paged_attn(q, cache, tables, clens, causal=False, chain=chain)
     k_ref = k.permute(1, 0, 2).unsqueeze(0)  # [1,H,T,D]
     v_ref = v.permute(1, 0, 2).unsqueeze(0)
     ref = F.scaled_dot_product_attention(q, k_ref, v_ref, dropout_p=0.0, is_causal=False)

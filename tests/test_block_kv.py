@@ -7,6 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "torch-ext"))
 
 import torch
 import torch.nn.functional as F
+import pytest
+import szl_block_kv._ops as ops
 from szl_block_kv import PagedCache, ReceiptChain, paged_attn, reshape_and_cache, selfcheck
 
 
@@ -32,7 +34,7 @@ def test_shuffled_pages_match_contiguous():
     slots = torch.cat([torch.arange(bs) + 2 * bs, torch.arange(bs) + 0 * bs])
     reshape_and_cache(k, v, cache, slots)
     tables = torch.tensor([[2, 0, -1, -1]])
-    y = paged_attn(q, cache, tables, torch.tensor([t]))
+    y = paged_attn(q, cache, tables, torch.tensor([t]), causal=False)
     k_ref = k.permute(1, 0, 2).unsqueeze(0)
     v_ref = v.permute(1, 0, 2).unsqueeze(0)
     ref = F.scaled_dot_product_attention(q, k_ref, v_ref, dropout_p=0.0, is_causal=False)
@@ -49,7 +51,7 @@ def test_partial_context_lens_match_trimmed_contiguous():
     reshape_and_cache(k, v, cache, torch.arange(t))
     tables = torch.tensor([[0, 1, -1, -1]])
     clen = 5
-    y = paged_attn(q, cache, tables, torch.tensor([clen]))
+    y = paged_attn(q, cache, tables, torch.tensor([clen]), causal=False)
     k_ref = k[:clen].permute(1, 0, 2).unsqueeze(0)
     v_ref = v[:clen].permute(1, 0, 2).unsqueeze(0)
     ref = F.scaled_dot_product_attention(q, k_ref, v_ref, dropout_p=0.0, is_causal=False)
@@ -64,7 +66,7 @@ def test_receipt_chain():
     cache = PagedCache(num_blocks=2, block_size=4, n_heads=1, d_head=8)
     reshape_and_cache(k, v, cache, torch.arange(4))
     chain = ReceiptChain()
-    paged_attn(q, cache, torch.tensor([[0, -1]]), torch.tensor([4]), chain=chain)
+    paged_attn(q, cache, torch.tensor([[0, -1]]), torch.tensor([4]), causal=False, chain=chain)
     ok, depth, brk = chain.verify()
     assert ok and depth == 1 and brk == -1
     assert chain.head() is not None and len(chain.head()) == 64
@@ -81,8 +83,19 @@ def test_cuda_skip_is_honest():
     v = torch.randn(4, 1, 8, device="cuda")
     cache = PagedCache(num_blocks=2, block_size=4, n_heads=1, d_head=8, device="cuda")
     reshape_and_cache(k, v, cache, torch.arange(4, device="cuda"))
-    y = paged_attn(q, cache, torch.tensor([[0, -1]], device="cuda"), torch.tensor([4], device="cuda"))
+    y = paged_attn(q, cache, torch.tensor([[0, -1]], device="cuda"), torch.tensor([4], device="cuda"), causal=False)
     k_ref = k.permute(1, 0, 2).unsqueeze(0)
     v_ref = v.permute(1, 0, 2).unsqueeze(0)
     ref = F.scaled_dot_product_attention(q, k_ref, v_ref, dropout_p=0.0, is_causal=False)
     assert torch.allclose(y, ref, atol=1e-5, rtol=1e-5)
+
+
+@pytest.mark.parametrize("causal_kwargs", [{}, {"causal": True}])
+def test_causal_request_fails_closed_before_cache_read_or_receipt(causal_kwargs, monkeypatch):
+    cache = PagedCache(num_blocks=1, block_size=2, n_heads=1, d_head=4)
+    chain = ReceiptChain()
+    q = torch.zeros(1, 1, 1, 4)
+    monkeypatch.setattr(ops, "_gather_kv", lambda *_args: pytest.fail("causal request read cache"))
+    with pytest.raises(NotImplementedError, match="causal paged attention is unavailable"):
+        paged_attn(q, cache, torch.tensor([[0]]), torch.tensor([1]), chain=chain, **causal_kwargs)
+    assert len(chain) == 0

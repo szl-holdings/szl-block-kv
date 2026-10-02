@@ -165,6 +165,11 @@ from szl_block_kv import PagedCache, paged_attn, reshape_and_cache, selfcheck
 print(selfcheck())
 ```
 
-Correctness (documented): paged gather matches contiguous KV SDPA within atol/rtol `1e-5` on float32. Skip CUDA Triton — that kernel is not in v0.
+Correctness (documented): **noncausal** paged gather matches contiguous KV
+SDPA within atol/rtol `1e-5` on float32. Call
+`paged_attn(..., causal=False)` explicitly. The existing `causal=True` default
+and explicit causal requests now raise `NotImplementedError` rather than
+silently return noncausal attention. This is a deliberate fail-closed API
+break, not a causal implementation. Skip CUDA Triton — that kernel is not in v0.
 
 Apache-2.0. Copyright 2026 SZL Holdings.
