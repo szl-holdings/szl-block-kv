@@ -53,3 +53,9 @@ def test_card_pins_recorded_first_class_cpu_release():
         assert "REPLACE_WITH_OWNER_QUALIFIED_KERNEL_COMMIT" not in card
         assert "BLOCKED_NOT_CONFIGURED" in card
         assert "NOT_CLAIMED" not in card
+        assert "committed mirror workflow" not in card
+        if path.name == "CARD.md":
+            assert "Rendering this card does not establish Hub publication." in card
+            assert "| MEASURED |" not in card
+            assert card.count("[pinned test source](") == 3
+            assert card.count("[receipt](") == 1
