@@ -12,6 +12,7 @@ The full card contract (schema and D10 receipts) is enforced by
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -38,3 +39,23 @@ def test_card_front_matter_names_this_repo_and_license():
     assert f"  source_repo: szl-holdings/{_REPO}" in front_matter
     license_text = (_ROOT / "LICENSE").read_text(encoding="utf-8")
     assert "Apache License" in license_text and "Version 2.0" in license_text
+
+
+def test_card_pins_recorded_first_class_cpu_release():
+    release = json.loads((_ROOT / "hf" / "releases" / "20261003-cache-index-cpu.json").read_text(encoding="utf-8"))
+    assert release["provider_repo_type"] == "kernel"
+    assert release["automatic_mirror"] == "BLOCKED_NOT_CONFIGURED"
+    revision = release["provider_revision"]
+    for path in (_ROOT / "hf" / "card.yaml", _ROOT / "CARD.md"):
+        card = path.read_text(encoding="utf-8")
+        assert f'KERNEL_REVISION = "{revision}"' in card
+        assert 'backend="cpu"' in card
+        assert "REPLACE_WITH_OWNER_QUALIFIED_KERNEL_COMMIT" not in card
+        assert "BLOCKED_NOT_CONFIGURED" in card
+        assert "NOT_CLAIMED" not in card
+        assert "committed mirror workflow" not in card
+        if path.name == "CARD.md":
+            assert "Rendering this card does not establish Hub publication." in card
+            assert "| MEASURED |" not in card
+            assert card.count("[pinned test source](") == 3
+            assert card.count("[receipt](") == 1
