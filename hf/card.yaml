@@ -6,7 +6,7 @@
 # .github/workflows/hf-card.yml:
 #   python <hf-card>/render.py hf/card.yaml --out CARD.md
 # CARD.md is the committed rendering; CI fails when it drifts from this file.
-# Nothing in this repository writes the Hub yet: see hf/README.md.
+# No automatic Hub writer is configured here; the CPU release was manual.
 type: kernel
 repo_id: SZLHOLDINGS/szl-block-kv
 title: szl-block-kv
@@ -35,21 +35,27 @@ kernel:
   load: |
     import re
 
-    # Set only after owner qualification of this first-class Kernel Hub release.
-    KERNEL_REVISION = "REPLACE_WITH_OWNER_QUALIFIED_KERNEL_COMMIT"
+    # CPU-only release recorded in hf/releases/20261003-cache-index-cpu.json.
+    KERNEL_REVISION = "54a19796ee2c4f761c9482f77dd1f989a773e17f"
     if re.fullmatch(r"[0-9a-f]{40}", KERNEL_REVISION) is None:
-        raise ValueError("An owner-qualified immutable Kernel Hub commit is required")
+        raise ValueError("An immutable 40-character Kernel Hub commit is required")
 
     # This loads and executes remote Python code; review the pinned source first.
     from kernels import get_kernel
 
-    kv = get_kernel("SZLHOLDINGS/szl-block-kv", revision=KERNEL_REVISION, trust_remote_code=True)
+    kv = get_kernel(
+        "SZLHOLDINGS/szl-block-kv",
+        revision=KERNEL_REVISION,
+        backend="cpu",
+        trust_remote_code=True,
+    )
     print(kv.selfcheck())
 sections:
   - heading: Doctrine
     body: >-
       Doctrine v11. **Λ = Conjecture 1 OPEN** (advisory; uniqueness unproven, not
-      proven trust). GitHub bytes are the artifact; the Hub is the publish mirror.
+      proven trust). GitHub is the source; the Hub is a separately observed
+      publication target.
   - heading: Invariant-keyed blocks
     body: |
       A paged-KV block addressed by its token content alone is reusable by any request
@@ -104,17 +110,18 @@ sections:
   - heading: Source and Hub release scope
     body: |
       Loading with `trust_remote_code=True` executes code from the selected first-class
-      Kernel Hub repository. Review that immutable source and qualify a compatible
-      `kernels` client before running it. Set `KERNEL_REVISION` to the owner-qualified
-      Kernel Hub publication commit; this card does not establish one. A GitHub
-      source commit or model-twin revision is not the provider revision. The syntax
-      check in the example does not establish release qualification.
+      Kernel Hub repository. Review that immutable source and use a compatible
+      `kernels` client (the recorded CPU qualification used 0.16.1) before running it.
+      The pinned provider revision above is distinct from GitHub source commit
+      `217e3b24017cd5fadb2525a7b5207f7c89a46413` and from the separately owned
+      model-type twin. The syntax guard alone does not establish qualification.
 
-      This is staged GitHub card source, not evidence that the described build is
-      currently published or qualified on either Hub twin. The imported Hub package predates the invariant-keyed source APIs described here. This staged card must be published together with a matching qualified build, never as a card-only update.
-
-      Publication/import context is recorded in [hf/README.md](https://github.com/szl-holdings/szl-block-kv/blob/dd91c1ca2431b7d1ef65dbbb261b8b402605f111/hf/README.md).
-      Historical Hub-only benchmark receipts remain REPORTED at their stated scope.
+      The first-class Kernel Hub build at that revision is published. The
+      [source-bound CPU release record](https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json)
+      reports 92 synthetic conformance tests passed, with no independent replay,
+      GPU/Triton qualification, speed, or energy claim. This generated GitHub card
+      is not automatically mirrored to either Hub twin (`BLOCKED_NOT_CONFIGURED`);
+      its current Hub publication state requires a separate exact-revision readback.
 claims:
   - label: MEASURED
     claim: >-
@@ -145,6 +152,14 @@ claims:
       and `build/torch-cpu`, `selfcheck` ok) and a local pytest run, recorded 2026-08-29
       in the Hub-only `BENCH.laptop-blackwell.json` and `OPERATIONAL.json` against source
       commit 7cf99cca. No receipt for them is committed in this repository.
+  - label: REPORTED
+    claim: >-
+      The first-class Kernel Hub revision 54a19796ee2c4f761c9482f77dd1f989a773e17f
+      is source-bound to GitHub 217e3b24017cd5fadb2525a7b5207f7c89a46413. Its
+      CPU-only synthetic qualification record reports 92 tests passed, 0 failed,
+      and 0 skipped. Independent replay, GPU, Triton, speed, and energy are not
+      established by this record.
+    receipt: https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json
   - label: UNAVAILABLE
     claim: GPU Triton page kernel. It is not in v0; no cubin and no timed GPU run exist.
   - label: UNAVAILABLE
@@ -153,8 +168,8 @@ claims:
     claim: >-
       Cost of keying. The hit-rate cost of narrowing the keyspace by bundle is not
       measured here. Measure it on your own traffic before promotion.
-  - label: NOT_CLAIMED
-    claim: Any speed-up, tokens/s or energy figure.
+  - label: UNAVAILABLE
+    claim: Speed-up, tokens/s, and energy measurements for this CPU-only release.
 limits:
   - Kernel, not weights. Not a drop-in vLLM replacement.
   - Receipts prove integrity and declared origin only; they do not prove accuracy, readiness or performance.
