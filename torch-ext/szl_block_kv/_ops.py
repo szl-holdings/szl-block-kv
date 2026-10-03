@@ -13,11 +13,35 @@ class PagedCache:
         self.k = torch.zeros(num_blocks, block_size, n_heads, d_head, device=device, dtype=dtype)
         self.v = torch.zeros_like(self.k)
 
+def _validate_index_tensor(indices: torch.Tensor, name: str, ndim: int) -> None:
+    integer_dtypes = (torch.uint8, torch.int8, torch.int16, torch.int32, torch.int64)
+    if (not isinstance(indices, torch.Tensor) or indices.dtype not in integer_dtypes
+            or indices.layout != torch.strided or indices.ndim != ndim):
+        raise ValueError(f"{name} must be a rank-{ndim} dense integer tensor")
+
 def reshape_and_cache(k: torch.Tensor, v: torch.Tensor, cache: PagedCache, slot_mapping: torch.Tensor) -> None:
-    """k,v: [T, H, D]; slot_mapping: [T] linear slot = block * block_size + offset."""
-    _ = k.shape[0]
+    """k,v: [T, H, D]; slot_mapping: [T] valid cache slots; no negative sentinel."""
+    _validate_index_tensor(slot_mapping, "slot_mapping", 1)
+    if (not isinstance(cache.k, torch.Tensor) or not isinstance(cache.v, torch.Tensor)
+            or cache.k.ndim != 4 or cache.v.shape != cache.k.shape
+            or cache.k.shape[1] != cache.block_size
+            or cache.k.dtype != cache.v.dtype or cache.k.device != cache.v.device
+            or cache.k.layout != torch.strided or cache.v.layout != torch.strided):
+        raise ValueError("cache.k and cache.v must have matching rank-4 shape, dtype, device and dense layout")
+    if (not isinstance(k, torch.Tensor) or not isinstance(v, torch.Tensor)
+            or k.ndim != 3 or v.shape != k.shape or k.shape[1:] != cache.k.shape[2:]
+            or slot_mapping.shape[0] != k.shape[0]):
+        raise ValueError("k and v must both have shape [T, H, D] matching the cache and slot_mapping")
+    for name, value, destination in (("k", k, cache.k), ("v", v, cache.v)):
+        if (value.dtype != destination.dtype or value.device != destination.device
+                or value.layout != torch.strided):
+            raise ValueError(f"{name} must match its cache dtype and device and have dense layout")
     bs = cache.block_size
+    if bs <= 0:
+        raise ValueError("cache.block_size must be positive")
     slots = slot_mapping.long()
+    if torch.any((slots < 0) | (slots >= cache.k.shape[0] * bs)).item():
+        raise ValueError("slot_mapping contains an out-of-range cache slot")
     blk = torch.div(slots, bs, rounding_mode="floor")
     off = slots % bs
     cache.k[blk, off] = k
@@ -25,8 +49,20 @@ def reshape_and_cache(k: torch.Tensor, v: torch.Tensor, cache: PagedCache, slot_
 
 def _gather_kv(cache: PagedCache, block_tables: torch.Tensor, context_lens: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     """block_tables: [B, max_blocks] -> contiguous K/V [B, H, Tmax, D] padded."""
+    _validate_index_tensor(block_tables, "block_tables", 2)
+    _validate_index_tensor(context_lens, "context_lens", 1)
     b, max_blocks = block_tables.shape
     bs = cache.block_size
+    if bs <= 0 or context_lens.shape[0] != b:
+        raise ValueError("context_lens must match the table batch and cache.block_size must be positive")
+    contexts = context_lens.to(device=block_tables.device, dtype=torch.int64)
+    if torch.any((contexts < 0) | (contexts > max_blocks * bs)).item():
+        raise ValueError("context_lens contains a length outside the block-table capacity")
+    nblocks = torch.div(contexts + bs - 1, bs, rounding_mode="floor")
+    active = torch.arange(max_blocks, device=block_tables.device)[None, :] < nblocks[:, None]
+    pages = block_tables.long()[active]
+    if torch.any((pages < 0) | (pages >= cache.k.shape[0])).item():
+        raise ValueError("block_tables contains an out-of-range active cache page")
     h, d = cache.k.shape[2], cache.k.shape[3]
     tmax = max_blocks * bs
     k_out = torch.zeros(b, h, tmax, d, device=cache.k.device, dtype=cache.k.dtype)
