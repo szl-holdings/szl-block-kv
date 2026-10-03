@@ -1,4 +1,4 @@
-# Hugging Face card source: staged, not published
+# Hugging Face source and CPU publication
 
 This folder is the GitHub source for the two Hub twins of this repository:
 
@@ -9,7 +9,8 @@ This folder is the GitHub source for the two Hub twins of this repository:
 | --- | --- |
 | `card.yaml` | The card source for **both** twins (plan decision D9: one source, one template). |
 | `../CARD.md` | Its rendering by the shared [`hf-card`](https://github.com/szl-holdings/.github/tree/main/hf-card) toolkit. This is the file a mirror publishes as `README.md`. |
-| `hub-import/` | The Hub cards exactly as the Hub served them, and `IMPORT.json`: the imported revisions, card digests, the full Hub file list of both twins, and how each Hub file compares with this repository. |
+| `hub-import/` | The historical 2026-09-29 import: card bytes, revisions, digests, and file lists of both twins. It is a baseline, not current publication state. |
+| `releases/20261003-cache-index-cpu.json` | Source-bound CPU publication readback and conformance receipt for the repaired first-class kernel. |
 
 CI keeps them honest:
 
@@ -28,20 +29,69 @@ To refresh the import (read-only, anonymous public Hub API, no token):
 python scripts/hf_hub_import.py fetch
 ```
 
-## Publish status: blocked on owner actions
+## First-class kernel CPU publication
 
-**Nothing in this repository writes the Hub.** Both twins still serve the cards in `hub-import/`; the Kernel Hub card has no front matter, so it carries no license tag. Publishing `CARD.md` needs all of:
+The manual Git publication `54a19796ee2c4f761c9482f77dd1f989a773e17f` serves source
+`217e3b24017cd5fadb2525a7b5207f7c89a46413` from this repository. It includes the cache
+index admission repair, the invariant-keyed APIs, the rendered card, and Apache-2.0
+license. It updates the existing `torch-cpu` and `torch-universal` Python variants;
+qualification was run with `backend="cpu"` only.
 
-1. **An HF credential for this repository.** Preferred: Trusted Publishers for `SZLHOLDINGS/szl-block-kv` and `kernels/SZLHOLDINGS/szl-block-kv`, bound to this repository's mirror workflow on `main`. Fallback: a repository secret `HF_TOKEN` scoped to those two repos. This repository has no HF secret today. (Owner action.)
-2. **The shared mirror.** `reusable-hf-mirror.yml` (model and kernel targets) is not merged in `szl-holdings/.github`; workflow changes there wait for the owner's trust-root review. No copy-pasted mirror is added here in the meantime.
-3. **A kernel write path.** `huggingface_hub` 2.0.0 refuses commits to `repo_type="kernel"`; Git is the only proven transport.
+**MEASURED publication readback:** all 12 declared files matched their byte hashes;
+the source manifest and CPU receipt chain verified; `.gitattributes`,
+`BENCH.laptop-blackwell.json`, and `OPERATIONAL.json` were preserved byte-for-byte.
+**REPORTED CPU conformance:** a fresh `get_kernel` load using `kernels==0.16.1`,
+Python 3.11.9, and PyTorch 2.10.0 passed all 92 source tests, `selfcheck()`, and
+`selfcheck_invariant()`. The receipt records the source/harness digests, fixture
+scope, seeds, CPU hardware, and results. Independent replay is **UNAVAILABLE**;
+key trust remains **REPO_DECLARED**. No GPU, Triton, training, speedup, energy, or
+scientific qualification is established.
 
-When those exist, a thin caller of the shared mirror publishes `CARD.md` as `README.md` to both twins, ships `LICENSE` (the kernel repo has none on the Hub, and the model twin's `LICENSE` differs from this repository's), and keeps the Hub-only receipts listed in `hub-import/IMPORT.json`. Until then, nobody edits these cards on the Hub.
+The [release record](releases/20261003-cache-index-cpu.json) binds these observations
+to the immutable first-class kernel revision. Review the pinned code before loading:
 
-## What the import shows
+```python
+from kernels import get_kernel
 
-Read the numbers from `hub-import/IMPORT.json`; the points below are what they mean.
+kv = get_kernel(
+    "SZLHOLDINGS/szl-block-kv",
+    revision="54a19796ee2c4f761c9482f77dd1f989a773e17f",
+    backend="cpu",
+    trust_remote_code=True,
+)
+print(kv.selfcheck())
+print(kv.selfcheck_invariant())
+```
 
-- **The Hub kernel build predates this tree.** `torch-ext/szl_block_kv/_invariant.py` (the invariant-keyed blocks the card describes) is not in the Hub build, and `__init__.py` and `_ops.py` differ. The staged card describes this repository, so it must publish together with a build of this tree, never on its own.
+`trust_remote_code=True` permits execution of the reviewed Python package; it is
+not publisher certification. Causal attention still fails closed. The release did
+not mutate the separately owned model-type twin or retire its cross-writer.
+
+## Automated mirror: BLOCKED, not configured
+
+No workflow in this repository automatically writes the Hub. The CPU release above
+used a manual source-bound Git writer after green source checks and local package
+qualification. Future source changes are not automatically published. The staged
+shared-mirror plan still requires:
+
+1. **A repository-scoped HF credential.** Prefer Trusted Publishers bound to a
+   reviewed mirror on `main`, or a scoped repository secret. Local Git publishing
+   authority does not establish CI authority.
+2. **The shared mirror.** `reusable-hf-mirror.yml` for model and kernel targets is
+   not available in the checked shared workflow inventory. Its trust-root review
+   remains separate; no copied mirror is introduced here.
+3. **A compatible kernel transport and witness.** Generic Hub commit methods do
+   not establish first-class kernel write support. This release used Kernel Hub
+   Git and separately loaded the exact provider revision with a compatible client.
+
+Any future mirror must preserve Hub-only historical receipts and pair card changes
+with a matching qualified build. The model twin's license, artifacts, and ownership
+must be reconciled separately before a writer changes it.
+
+## What the historical import showed
+
+Read the historical numbers from `hub-import/IMPORT.json`; the observations below describe its 2026-09-29 baseline.
+
+- **The imported Hub kernel build predates this tree.** `torch-ext/szl_block_kv/_invariant.py` (the invariant-keyed blocks the card describes) was absent from that imported build, and `__init__.py` and `_ops.py` differed. The CPU publication above closes this first-class kernel gap; the historical import remains unchanged.
 - **Hub-only receipts.** `BENCH.laptop-blackwell.json` and `OPERATIONAL.json` exist only on the Hub. The staged card cites them as `REPORTED`, not `MEASURED`.
 - **Other writers.** The model twin also carries `block_kv.py` and `chain.py`, uploaded by `szl-holdings/a11oy` `atelier-hub-publish.yml` (a cross-writer the plan retires). Its card thumbnail `og-card.png` exists only on the Hub; the staged card does not reference it.

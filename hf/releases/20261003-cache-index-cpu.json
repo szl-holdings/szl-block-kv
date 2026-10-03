@@ -1,0 +1,174 @@
+{
+  "schema": "szl.kernel-release-record/v1",
+  "truth_label": "REPORTED",
+  "source_revision": "217e3b24017cd5fadb2525a7b5207f7c89a46413",
+  "provider_repo_type": "kernel",
+  "provider_repository": "SZLHOLDINGS/szl-block-kv",
+  "provider_revision": "54a19796ee2c4f761c9482f77dd1f989a773e17f",
+  "publication_readback": {
+    "schema": "szl.kernel-publication-readback/v1",
+    "truth_label": "MEASURED",
+    "observed_at": "2026-10-03T06:03:13.233871+00:00",
+    "provider_repo_type": "kernel",
+    "provider_revision": "54a19796ee2c4f761c9482f77dd1f989a773e17f",
+    "previous_provider_revision": "b5c514505f89f890474568091ad5cfc868e2b664",
+    "source_revision": "217e3b24017cd5fadb2525a7b5207f7c89a46413",
+    "source_files": {
+      "build/torch-cpu/szl_block_kv/__init__.py": {
+        "sha256": "83d27f4c0f806d7b6a3d38b864c26cec46e80953f38c24f17078886efa9dd478",
+        "bytes": 571
+      },
+      "build/torch-cpu/szl_block_kv/_chain.py": {
+        "sha256": "463d71e2c4d4272758eb4acd2922feb30766c3150888898aa07dc33da62b8a90",
+        "bytes": 1310
+      },
+      "build/torch-cpu/szl_block_kv/_invariant.py": {
+        "sha256": "3b1b3b003b6c179f7a43fa76f4aa9c2e95c63d52731ce0307984b5ad5ede98a3",
+        "bytes": 14502
+      },
+      "build/torch-cpu/szl_block_kv/_ops.py": {
+        "sha256": "4adba1a2ce8966976a6c05dc1e4bb1b650d6816737e0d5c2288143ae978e2f8a",
+        "bytes": 7184
+      },
+      "build/torch-cpu/metadata.json": {
+        "sha256": "1757718ee585192a344d30d375c562508dc3731183bedafb64ab48c8d5441a4e",
+        "bytes": 279
+      },
+      "build/torch-universal/szl_block_kv/__init__.py": {
+        "sha256": "83d27f4c0f806d7b6a3d38b864c26cec46e80953f38c24f17078886efa9dd478",
+        "bytes": 571
+      },
+      "build/torch-universal/szl_block_kv/_chain.py": {
+        "sha256": "463d71e2c4d4272758eb4acd2922feb30766c3150888898aa07dc33da62b8a90",
+        "bytes": 1310
+      },
+      "build/torch-universal/szl_block_kv/_invariant.py": {
+        "sha256": "3b1b3b003b6c179f7a43fa76f4aa9c2e95c63d52731ce0307984b5ad5ede98a3",
+        "bytes": 14502
+      },
+      "build/torch-universal/szl_block_kv/_ops.py": {
+        "sha256": "4adba1a2ce8966976a6c05dc1e4bb1b650d6816737e0d5c2288143ae978e2f8a",
+        "bytes": 7184
+      },
+      "build/torch-universal/metadata.json": {
+        "sha256": "fa30c8e9f613eb22a91720cdd9f3f855c9d76a392ad1f2481a239a2ef9e993ac",
+        "bytes": 285
+      },
+      "README.md": {
+        "sha256": "a180c1d1483dfa8a157fb9b41baab6a31cdebf19448020751f421af098655f9d",
+        "bytes": 7873
+      },
+      "LICENSE": {
+        "sha256": "bc8cef3450d423b046a3ba2b1a03089c8c795302f502cabbdbef055a68f0b1e7",
+        "bytes": 11343
+      }
+    },
+    "receipt_integrity": true,
+    "preserved_historical_assets": {
+      ".gitattributes": "315871b322399f4d4163420d48ab6b22bae746799c5178967623ffa6ba7b6504",
+      "BENCH.laptop-blackwell.json": "d0d6a3ecc3bf5eb009a718e26565f970b3e53d7fb1ebc29bec9e1f8feae8103c",
+      "OPERATIONAL.json": "6527f4251d1dbaed9136102b5866277c66773ffcb02039e8c3da28f86c3e1a7b"
+    },
+    "model_twin_mutated": false,
+    "independent_witness": false,
+    "signature_authority": "REPO_DECLARED"
+  },
+  "cpu_qualification": {
+    "schema": "szl.kernel-cpu-qualification/v1",
+    "truth_label": "REPORTED",
+    "observed_at": "2026-10-03T06:03:22.801435+00:00",
+    "mode": "remote",
+    "source_revision": "217e3b24017cd5fadb2525a7b5207f7c89a46413",
+    "provider_repo_type": "kernel",
+    "provider_revision": "54a19796ee2c4f761c9482f77dd1f989a773e17f",
+    "loaded_module_dir": "build/torch-cpu/szl_block_kv",
+    "module_byte_parity": true,
+    "client": "0.16.1",
+    "python": "3.11.9",
+    "torch": "2.10.0+cu128",
+    "execution_device": "cpu",
+    "cuda_available": false,
+    "harness_sha256": "8222c62f5da58f03fa7d3e44b832290f5064954bb71fb1dfbe0b6a3a483911b8",
+    "test_exit_code": 0,
+    "selfcheck": {
+      "ok": true,
+      "max_abs_vs_contiguous": 1.7881393432617188e-07,
+      "chain_ok": true,
+      "chain_depth": 1,
+      "path": "torch_gather",
+      "lambda": "Conjecture 1",
+      "note": "v0 gather matches contiguous KV; Triton page kernel UNAVAILABLE; no speedup claimed"
+    },
+    "invariant_selfcheck": {
+      "ok": true,
+      "first_lookup": "miss_cold",
+      "same_regime_lookup": "hit",
+      "cross_regime_lookup": "miss_cross_regime",
+      "cross_regime_admit_rejected": true,
+      "distinct_physical_blocks": true,
+      "permissive_bundle": "0ae1112a8e8ea2ae",
+      "strict_bundle": "d0e01500c56638e9",
+      "chain_ok": true,
+      "chain_depth": 6,
+      "audit": {
+        "ok": true,
+        "problems": [],
+        "live_blocks": 2,
+        "distinct_regimes": 2,
+        "stats": {
+          "hit": 1,
+          "miss_cold": 1,
+          "miss_cross_regime": 1,
+          "admitted": 2,
+          "evicted": 0,
+          "rejected_cross_regime": 1
+        },
+        "label": "MEASURED containment of this addressing layer",
+        "what_not": "not a proof about attention arithmetic; no speedup claim",
+        "lambda": "Conjecture 1"
+      },
+      "label": "MEASURED containment property of invariant-keyed addressing",
+      "note": "Same tokens under a different invariant bundle address a different block, so cross-regime reuse cannot occur. This is a property of the addressing layer only. Lambda = Conjecture 1 OPEN. No speedup claimed; no tokens/s; no joules.",
+      "lambda": "Conjecture 1"
+    },
+    "inputs": "synthetic fixtures from exact source regression harness",
+    "gpu": "NOT_RUN",
+    "triton": "UNAVAILABLE",
+    "energy": "UNAVAILABLE",
+    "speedup": "NOT_MEASURED",
+    "independent_witness": false,
+    "signature_status": "UNSIGNED_CONTENT_RECEIPT",
+    "training": "NOT_RUN",
+    "base_revision": "217e3b24017cd5fadb2525a7b5207f7c89a46413",
+    "dataset_sha256": "8222c62f5da58f03fa7d3e44b832290f5064954bb71fb1dfbe0b6a3a483911b8",
+    "dataset_scope": "SYNTHETIC_FIXTURE_GENERATORS_IN_EXACT_SOURCE_HARNESS",
+    "seeds": {
+      "selfcheck": 20260828,
+      "admission_equivalence": 41
+    },
+    "hardware": {
+      "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel",
+      "architecture": "AMD64",
+      "os": "Windows",
+      "device": "cpu"
+    },
+    "loss": null,
+    "loss_status": "UNAVAILABLE_NOT_A_TRAINING_RUN",
+    "metrics": {
+      "tests_passed": 92,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "max_abs_vs_contiguous": 1.7881393432617188e-07
+    },
+    "previous_receipt_sha256": "c0147a08a91cd46f3e27051d6ff016f36b2e493a8c4ec7d34f4f2d0351fb1069",
+    "previous_receipt_kind": "SOURCE_BINDING_MANIFEST",
+    "original_observation_receipt_sha256": "1c794286b01a1f84cdc765c38f928ba0ea1e21dfdde4e935f0d425485f967339",
+    "receipt_sha256": "f23e053bfbf973fa525ac6b345f19f6b60a36ff58250138f454da7a58dda029d"
+  },
+  "independent_witness": false,
+  "key_trust": "REPO_DECLARED",
+  "automatic_mirror": "BLOCKED_NOT_CONFIGURED",
+  "model_twin_mutated_by_this_release": false,
+  "qualification_scope": "CPU-only synthetic conformance; no GPU, training, speed, energy, or scientific qualification claim",
+  "receipt_sha256": "c3a5a77a4ca0092e19653f72a4ab52585a2ad2673d33a855bd68f14c842c1325"
+}
