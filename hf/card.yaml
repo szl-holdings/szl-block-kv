@@ -17,6 +17,11 @@ summary: >-
   **Distinct from a11oy MODELED H2O eviction.**
   v0 is a labeled torch gather over a block table with SHA3-256 receipts.
   The GPU Triton page kernel is **UNAVAILABLE**. No speedup claim.
+overview:
+  artifact_type: CPU paged-KV kernel
+  stage: CPU release recorded; automatic card publication not configured
+links:
+  evidence: https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json
 front_matter:
   license: apache-2.0
   library_name: kernels

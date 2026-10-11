@@ -14,9 +14,23 @@ szl:
 <!-- hf-card: type=kernel source=szl-holdings/szl-block-kv vars=hf/card.yaml -->
 <!-- Rendered by szl-holdings/.github hf-card/render.py. Edit hf/card.yaml in szl-holdings/szl-block-kv; do not edit this card on the Hub. -->
 
+<p><a href="https://huggingface.co/spaces/SZLHOLDINGS/szl-command-lab"><img src="https://raw.githubusercontent.com/szl-holdings/.github/main/profile/assets/szl/logos/szl_mark_holographic.svg" alt="SZL Holdings" width="112" /></a></p>
+
 # szl-block-kv
 
 **Original SZL construction in the paged-KV category.** Inspired by Kwon et al. PagedAttention SOSP 2023 https://arxiv.org/abs/2309.06180. **NOT a rehost of vLLM or kernels-community/paged-attention.** **Distinct from a11oy MODELED H2O eviction.** v0 is a labeled torch gather over a block table with SHA3-256 receipts. The GPU Triton page kernel is **UNAVAILABLE**. No speedup claim.
+
+**Artifact:** CPU paged-KV kernel · **Stage:** CPU release recorded; automatic card publication not configured
+
+[Explore in Command Lab](https://huggingface.co/spaces/SZLHOLDINGS/szl-command-lab) · [Build](https://github.com/szl-holdings/szl-block-kv) · [Evidence](https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json)
+
+## Before you use it
+
+- Kernel, not weights. Not a drop-in vLLM replacement.
+- Receipts prove integrity and declared origin only; they do not prove accuracy, readiness or performance.
+
+<details>
+<summary>Technical details and evidence</summary>
 
 ## Kernel
 
@@ -119,26 +133,27 @@ GPU/Triton qualification, speed, or energy claim. This generated GitHub card
 is not automatically mirrored to either Hub twin (`BLOCKED_NOT_CONFIGURED`);
 its current Hub publication state requires a separate exact-revision readback.
 
-## Claims
+## Evidence record
 
-| Label | Claim | Evidence |
-| --- | --- | --- |
-| REPORTED | Cross-regime containment. The 14 tests in the [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py) cover canonical bundle ids, domain separation against boundary confusion, hit vs cold miss vs cross-regime miss, refusal to rebind a physical block across regimes, no physical block serving two regimes (4 regimes x 3 runs), auditability across FIFO eviction, and receipt-chain depth. This describes test source, not a fresh run result. What-NOT: not a proof about attention arithmetic. | none linked |
-| REPORTED | Reuse fidelity under one regime. The [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py) defines `test_reuse_under_the_same_regime_is_numerically_exact`, which asserts that a served hit is `torch.equal` to recompute, and that both match noncausal contiguous-KV SDPA within atol/rtol 1e-5 on float32. This describes test source, not a fresh run result. | none linked |
-| REPORTED | Noncausal paged gather correctness. The [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_block_kv.py) asserts that paged attention over shuffled pages and over partial context lengths matches contiguous-KV SDPA with `is_causal=False` within atol/rtol 1e-5 on float32. This describes test source, not a fresh run result, and does not establish causal attention. | none linked |
-| REPORTED | CPU `get_kernel` load from the Kernel Hub (kernels 0.16.1, `build/torch-universal` and `build/torch-cpu`, `selfcheck` ok) and a local pytest run, recorded 2026-08-29 in the Hub-only `BENCH.laptop-blackwell.json` and `OPERATIONAL.json` against source commit 7cf99cca. No receipt for them is committed in this repository. | none linked |
-| REPORTED | The first-class Kernel Hub revision 54a19796ee2c4f761c9482f77dd1f989a773e17f is source-bound to GitHub 217e3b24017cd5fadb2525a7b5207f7c89a46413. Its CPU-only synthetic qualification record reports 92 tests passed, 0 failed, and 0 skipped. Independent replay, GPU, Triton, speed, and energy are not established by this record. | [receipt](https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json) |
-| UNAVAILABLE | GPU Triton page kernel. It is not in v0; no cubin and no timed GPU run exist. | none linked |
-| UNAVAILABLE | Eviction quality. v0 eviction is FIFO; no eviction-quality or hit-rate claim is made. | none linked |
-| UNAVAILABLE | Cost of keying. The hit-rate cost of narrowing the keyspace by bundle is not measured here. Measure it on your own traffic before promotion. | none linked |
-| UNAVAILABLE | Speed-up, tokens/s, and energy measurements for this CPU-only release. | none linked |
+**REPORTED** — Cross-regime containment. The 14 tests in the [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py) cover canonical bundle ids, domain separation against boundary confusion, hit vs cold miss vs cross-regime miss, refusal to rebind a physical block across regimes, no physical block serving two regimes (4 regimes x 3 runs), auditability across FIFO eviction, and receipt-chain depth. This describes test source, not a fresh run result. What-NOT: not a proof about attention arithmetic. (no receipt linked).
+
+**REPORTED** — Reuse fidelity under one regime. The [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py) defines `test_reuse_under_the_same_regime_is_numerically_exact`, which asserts that a served hit is `torch.equal` to recompute, and that both match noncausal contiguous-KV SDPA within atol/rtol 1e-5 on float32. This describes test source, not a fresh run result. (no receipt linked).
+
+**REPORTED** — Noncausal paged gather correctness. The [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_block_kv.py) asserts that paged attention over shuffled pages and over partial context lengths matches contiguous-KV SDPA with `is_causal=False` within atol/rtol 1e-5 on float32. This describes test source, not a fresh run result, and does not establish causal attention. (no receipt linked).
+
+**REPORTED** — CPU `get_kernel` load from the Kernel Hub (kernels 0.16.1, `build/torch-universal` and `build/torch-cpu`, `selfcheck` ok) and a local pytest run, recorded 2026-08-29 in the Hub-only `BENCH.laptop-blackwell.json` and `OPERATIONAL.json` against source commit 7cf99cca. No receipt for them is committed in this repository. (no receipt linked).
+
+**REPORTED** — The first-class Kernel Hub revision 54a19796ee2c4f761c9482f77dd1f989a773e17f is source-bound to GitHub 217e3b24017cd5fadb2525a7b5207f7c89a46413. Its CPU-only synthetic qualification record reports 92 tests passed, 0 failed, and 0 skipped. Independent replay, GPU, Triton, speed, and energy are not established by this record. [Receipt](https://github.com/szl-holdings/szl-block-kv/blob/ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json).
+
+**UNAVAILABLE** — GPU Triton page kernel. It is not in v0; no cubin and no timed GPU run exist. (no receipt linked).
+
+**UNAVAILABLE** — Eviction quality. v0 eviction is FIFO; no eviction-quality or hit-rate claim is made. (no receipt linked).
+
+**UNAVAILABLE** — Cost of keying. The hit-rate cost of narrowing the keyspace by bundle is not measured here. Measure it on your own traffic before promotion. (no receipt linked).
+
+**UNAVAILABLE** — Speed-up, tokens/s, and energy measurements for this CPU-only release. (no receipt linked).
 
 Labels follow the [SZL claim language](https://github.com/szl-holdings/.github/blob/main/docs/CLAIM_LANGUAGE.md). A claim is only as strong as the receipt it links.
-
-## Limits
-
-- Kernel, not weights. Not a drop-in vLLM replacement.
-- Receipts prove integrity and declared origin only; they do not prove accuracy, readiness or performance.
 
 ## Source and provenance
 
@@ -149,3 +164,5 @@ Labels follow the [SZL claim language](https://github.com/szl-holdings/.github/b
 | License | `apache-2.0` |
 
 Rendering this card does not establish Hub publication. Verify any Hub copy against its source revision, publication evidence, and exact Hub revision.
+
+</details>
