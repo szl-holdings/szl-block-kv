@@ -58,6 +58,7 @@ def test_card_pins_recorded_first_class_cpu_release():
         if path.name == "CARD.md":
             assert "Rendering this card does not establish Hub publication." in card
             assert "| MEASURED |" not in card
+            assert "**MEASURED** —" not in card
             assert card.count("[pinned test source](") == 3
             receipt_links = re.findall(r"\[receipt\]\(([^)]+)\)", card, re.IGNORECASE)
             assert receipt_links == [
