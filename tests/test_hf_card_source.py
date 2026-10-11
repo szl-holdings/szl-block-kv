@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -58,4 +59,8 @@ def test_card_pins_recorded_first_class_cpu_release():
             assert "Rendering this card does not establish Hub publication." in card
             assert "| MEASURED |" not in card
             assert card.count("[pinned test source](") == 3
-            assert card.count("[receipt](") == 1
+            receipt_links = re.findall(r"\[receipt\]\(([^)]+)\)", card, re.IGNORECASE)
+            assert receipt_links == [
+                "https://github.com/szl-holdings/szl-block-kv/blob/"
+                "ff4bc118f694dabf3d9b7a7dada65dbf7b2307d4/hf/releases/20261003-cache-index-cpu.json"
+            ]
