@@ -3,9 +3,9 @@
 #
 # Keeps CARD.md equal to its rendering of hf/card.yaml and lints it with the
 # shared SZL card toolkit (szl-holdings/.github hf-card, pinned by commit).
-# CARD.md is the card this repository will publish to both Hub twins (kernel
-# and model type). Read-only: no secrets, no Hub access. Publishing is the job
-# of a mirror workflow this repository does not have yet; see hf/README.md.
+# CARD.md is the Kernel Hub README that hf-kernel-publish.yml publishes with
+# the kernel build (the model twin gets hf/model-twin-pointer.md instead).
+# Read-only: no secrets, no Hub access; see hf/README.md.
 name: hf-card
 
 on:

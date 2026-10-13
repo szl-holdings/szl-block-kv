@@ -3,6 +3,7 @@
 """Honesty labels. Not a Λ proof. Not a speedup claim."""
 import ast
 import copy
+import json
 from pathlib import Path
 import re
 from types import SimpleNamespace
@@ -20,8 +21,21 @@ REQUIRED = [
 ]
 
 
+def _published_major():
+    """The kernel major that hf-kernel-publish writes to the v<major> branch."""
+    config = json.loads((ROOT / ".github" / "hf-kernels.json").read_text(encoding="utf-8"))
+    (entry,) = [k for k in config["kernels"] if k["repo_id"] == "SZLHOLDINGS/szl-block-kv"]
+    return entry["version"]
+
+
 def _assert_immutable_card_loader(card):
-    """Keep the exact provider/trust contract and reject mutable loader revisions."""
+    """Keep the exact provider/trust contract and reject mutable loader revisions.
+
+    The card's one loader either names the published major channel (``version=N``,
+    the v<N> branch that hf-kernel-publish writes and verifies through get_kernel)
+    or an immutable Kernel Hub revision behind a format guard. A branch passed as
+    ``revision=`` (for example the main branch) is never accepted.
+    """
     loaders = []
     for snippet in re.findall(r"```python\n(.*?)\n```", card, re.DOTALL):
         tree = ast.parse(snippet)
@@ -35,7 +49,13 @@ def _assert_immutable_card_loader(card):
             trust = keywords.get("trust_remote_code")
             assert isinstance(trust, ast.Constant) and trust.value is True
             revision = keywords.get("revision")
-            if isinstance(revision, ast.Constant):
+            version = keywords.get("version")
+            if version is not None:
+                assert revision is None, "version= and revision= are exclusive"
+                assert isinstance(version, ast.Constant) and type(version.value) is int
+                assert version.value == _published_major(), "card must load the published major"
+                assert set(keywords) == {"version", "trust_remote_code"}
+            elif isinstance(revision, ast.Constant):
                 assert isinstance(revision.value, str)
                 assert re.fullmatch(r"[0-9a-f]{40}", revision.value)
             else:

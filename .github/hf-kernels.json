@@ -1,0 +1,41 @@
+{
+  "schema": "szl.hf-kernels/v1",
+  "$comment": "Consumed by .github/workflows/hf-kernel-publish.yml via scripts/szl_kernel_publish.py. This repository is the only writer of the Kernel Hub repo kernels/SZLHOLDINGS/szl-block-kv and of the pointer README on the model twin SZLHOLDINGS/szl-block-kv. The kernel card is CARD.md, rendered from hf/card.yaml by the shared hf-card toolkit (hf-card.yml keeps the two in sync).",
+  "kernels": [
+    {
+      "repo_id": "SZLHOLDINGS/szl-block-kv",
+      "name": "szl-block-kv",
+      "version": 1,
+      "license": "Apache-2.0",
+      "source_repository": "szl-holdings/szl-block-kv",
+      "packages": [
+        { "src": "torch-ext/szl_block_kv", "name": "szl_block_kv" }
+      ],
+      "card": "CARD.md",
+      "license_file": "LICENSE",
+      "extra_files": {},
+      "prune_paths": [
+        "OPERATIONAL.json",
+        "BENCH.laptop-blackwell.json",
+        "SOURCE_BINDING.json"
+      ],
+      "python_depends": [],
+      "smoke": "hf/kernel_smoke.py",
+      "model_twin": {
+        "repo_id": "SZLHOLDINGS/szl-block-kv",
+        "mode": "pointer",
+        "card": "hf/model-twin-pointer.md",
+        "prune_paths": [
+          "build/",
+          "torch-ext/",
+          "tests/",
+          "build.toml",
+          "block_kv.py",
+          "chain.py",
+          "OPERATIONAL.json",
+          "BENCH.laptop-blackwell.json"
+        ]
+      }
+    }
+  ]
+}
