@@ -32,11 +32,12 @@ jobs:
           persist-credentials: false
 
       # Accepted shared card presentation and truthful publication footer.
+      # Candidate renderer from szl-holdings/.github#924; adopt only after canonical acceptance.
       - name: Check out hf-card at the pinned commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: szl-holdings/.github
-          ref: 3ef11ccd08c8350ff837c83735c802ff4d8323f9
+          ref: d7f97c7d038d1dc3a3d304808d0ed2748a8f240f
           path: .hf-card-toolkit
           sparse-checkout: hf-card
           persist-credentials: false
