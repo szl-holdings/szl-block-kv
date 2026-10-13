@@ -3,8 +3,9 @@
 """Hugging Face card source checks. Offline; no Hub access.
 
 hf/hub-import/ must still hold the exact bytes the Hub served when it was
-imported (scripts/hf_hub_import.py verify), and CARD.md, the card this repo
-will publish to both Hub twins, must name this repo and its Apache-2.0 license.
+imported (scripts/hf_hub_import.py verify), and CARD.md, the card
+hf-kernel-publish publishes as the Kernel Hub README, must name this repo and
+its Apache-2.0 license.
 The full card contract (schema and D10 receipts) is enforced by
 .github/workflows/hf-card.yml with the shared hf-card toolkit.
 """
@@ -42,17 +43,23 @@ def test_card_front_matter_names_this_repo_and_license():
     assert "Apache License" in license_text and "Version 2.0" in license_text
 
 
-def test_card_pins_recorded_first_class_cpu_release():
+def test_card_loads_v1_and_cites_recorded_cpu_release():
+    # The 2026-10-03 record is historical: it was a manual release, made before
+    # hf-kernel-publish existed, and it stays byte-for-byte as recorded.
     release = json.loads((_ROOT / "hf" / "releases" / "20261003-cache-index-cpu.json").read_text(encoding="utf-8"))
     assert release["provider_repo_type"] == "kernel"
     assert release["automatic_mirror"] == "BLOCKED_NOT_CONFIGURED"
     revision = release["provider_revision"]
     for path in (_ROOT / "hf" / "card.yaml", _ROOT / "CARD.md"):
         card = path.read_text(encoding="utf-8")
-        assert f'KERNEL_REVISION = "{revision}"' in card
-        assert 'backend="cpu"' in card
+        # Consumers load the v1 channel of the Kernel Hub repo that hf-kernel-publish writes.
+        assert 'get_kernel("SZLHOLDINGS/szl-block-kv", version=1, trust_remote_code=True)' in card
+        assert "hf-kernel-publish" in card
+        assert not re.search(r"revision\s*=\s*['\"]main['\"]", card)
+        assert "KERNEL_REVISION" not in card
+        assert revision in card
         assert "REPLACE_WITH_OWNER_QUALIFIED_KERNEL_COMMIT" not in card
-        assert "BLOCKED_NOT_CONFIGURED" in card
+        assert "BLOCKED_NOT_CONFIGURED" not in card
         assert "NOT_CLAIMED" not in card
         assert "committed mirror workflow" not in card
         if path.name == "CARD.md":

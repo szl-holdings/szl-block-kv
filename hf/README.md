@@ -7,8 +7,10 @@ This folder is the GitHub source for the two Hub twins of this repository:
 
 | Path | What it is |
 | --- | --- |
-| `card.yaml` | The card source for **both** twins (plan decision D9: one source, one template). |
-| `../CARD.md` | Its rendering by the shared [`hf-card`](https://github.com/szl-holdings/.github/tree/main/hf-card) toolkit. This is the file a mirror publishes as `README.md`. |
+| `card.yaml` | The card source (plan decision D9: one source, one template). |
+| `../CARD.md` | Its rendering by the shared [`hf-card`](https://github.com/szl-holdings/.github/tree/main/hf-card) toolkit. `hf-kernel-publish` publishes it as the Kernel Hub `README.md`. |
+| `model-twin-pointer.md` | The README `hf-kernel-publish` writes to the model-type twin: a pointer to the Kernel Hub repo. |
+| `kernel_smoke.py` | The smoke hook `hf-kernel-publish` runs on every loaded build (local and from the Hub). |
 | `hub-import/` | The historical 2026-09-29 import: card bytes, revisions, digests, and file lists of both twins. It is a baseline, not current publication state. |
 | `releases/20261003-cache-index-cpu.json` | Source-bound CPU publication readback and conformance receipt for the repaired first-class kernel. |
 
@@ -29,64 +31,51 @@ To refresh the import (read-only, anonymous public Hub API, no token):
 python scripts/hf_hub_import.py fetch
 ```
 
-## First-class kernel CPU publication
+## Publication: `hf-kernel-publish`
 
-The manual Git publication `54a19796ee2c4f761c9482f77dd1f989a773e17f` serves source
-`217e3b24017cd5fadb2525a7b5207f7c89a46413` from this repository. It includes the cache
-index admission repair, the invariant-keyed APIs, the rendered card, and Apache-2.0
-license. It updates the existing `torch-cpu` and `torch-universal` Python variants;
-qualification was run with `backend="cpu"` only.
+`.github/workflows/hf-kernel-publish.yml` (with `scripts/szl_kernel_publish.py` and
+`.github/hf-kernels.json`) is the only writer of both Hub twins.
 
-**MEASURED publication readback:** all 12 declared files matched their byte hashes;
-the source manifest and CPU receipt chain verified; `.gitattributes`,
-`BENCH.laptop-blackwell.json`, and `OPERATIONAL.json` were preserved byte-for-byte.
-**REPORTED CPU conformance:** a fresh `get_kernel` load using `kernels==0.16.1`,
-Python 3.11.9, and PyTorch 2.10.0 passed all 92 source tests, `selfcheck()`, and
-`selfcheck_invariant()`. The receipt records the source/harness digests, fixture
-scope, seeds, CPU hardware, and results. Independent replay is **UNAVAILABLE**;
+- **Pull request:** builds `build/torch-cpu` and `build/torch-universal` from
+  `torch-ext/szl_block_kv` (byte-identical, LF-normalised, generated `metadata.json`
+  with a sha256 digest) and loads both with `kernels==0.17.2` and CPU torch, then runs
+  `hf/kernel_smoke.py`. No secret, no Hub access.
+- **Release published** (or a dispatch from `main`): publishes the same tree to the
+  Kernel Hub repo on `main` **and** `v1` by fast-forward Git push (no force, no repo
+  creation), reads it back byte for byte, and in a fresh job loads it anonymously with
+  `get_kernel("SZLHOLDINGS/szl-block-kv", version=1, trust_remote_code=True)` and with
+  the main branch, failing unless the served files equal the GitHub source. Only then
+  does it replace the model twin's README with `model-twin-pointer.md` and remove the
+  twin's stale `build/`, `torch-ext/`, code uploads and plates.
+- **Weekly:** re-verifies what `get_kernel` serves and fails with `SOURCE_AHEAD` when the
+  latest release changed the kernel but was never published.
+
+The publisher owns `build/` on the Kernel Hub repo. It also writes `README.md` (from
+`CARD.md`), `LICENSE` and `SZL_KERNEL_SOURCE.json` (the GitHub commit the build came
+from), and removes the superseded Hub-only `OPERATIONAL.json`,
+`BENCH.laptop-blackwell.json` and `SOURCE_BINDING.json`. Other Hub files, such as
+`CPU_QUALIFICATION.json`, are kept. The credential is the org secret `HF_TOKEN`, used
+only by the two writing steps.
+
+The kernel major is `version` in `.github/hf-kernels.json`, not the release semver.
+Bumping it starts `v2` and leaves `v1` frozen.
+
+## Earlier manual CPU publication (historical)
+
+Before this workflow existed, a manual Git publication
+`54a19796ee2c4f761c9482f77dd1f989a773e17f` served source
+`217e3b24017cd5fadb2525a7b5207f7c89a46413`, with the cache index admission repair, the
+invariant-keyed APIs, the rendered card, and the Apache-2.0 license. Its
+[release record](releases/20261003-cache-index-cpu.json) binds a publication readback
+(all 12 declared files matched) and a **REPORTED** CPU conformance run (`kernels==0.16.1`,
+Python 3.11.9, PyTorch 2.10.0: 92 source tests, `selfcheck()` and
+`selfcheck_invariant()` passed) to that revision. Independent replay is **UNAVAILABLE**;
 key trust remains **REPO_DECLARED**. No GPU, Triton, training, speedup, energy, or
-scientific qualification is established.
-
-The [release record](releases/20261003-cache-index-cpu.json) binds these observations
-to the immutable first-class kernel revision. Review the pinned code before loading:
-
-```python
-from kernels import get_kernel
-
-kv = get_kernel(
-    "SZLHOLDINGS/szl-block-kv",
-    revision="54a19796ee2c4f761c9482f77dd1f989a773e17f",
-    backend="cpu",
-    trust_remote_code=True,
-)
-print(kv.selfcheck())
-print(kv.selfcheck_invariant())
-```
+scientific qualification is established. The record says `BLOCKED_NOT_CONFIGURED`
+because no automatic writer existed then; it is kept unchanged as a historical receipt.
 
 `trust_remote_code=True` permits execution of the reviewed Python package; it is
-not publisher certification. Causal attention still fails closed. The release did
-not mutate the separately owned model-type twin or retire its cross-writer.
-
-## Automated mirror: BLOCKED, not configured
-
-No workflow in this repository automatically writes the Hub. The CPU release above
-used a manual source-bound Git writer after green source checks and local package
-qualification. Future source changes are not automatically published. The staged
-shared-mirror plan still requires:
-
-1. **A repository-scoped HF credential.** Prefer Trusted Publishers bound to a
-   reviewed mirror on `main`, or a scoped repository secret. Local Git publishing
-   authority does not establish CI authority.
-2. **The shared mirror.** `reusable-hf-mirror.yml` for model and kernel targets is
-   not available in the checked shared workflow inventory. Its trust-root review
-   remains separate; no copied mirror is introduced here.
-3. **A compatible kernel transport and witness.** Generic Hub commit methods do
-   not establish first-class kernel write support. This release used Kernel Hub
-   Git and separately loaded the exact provider revision with a compatible client.
-
-Any future mirror must preserve Hub-only historical receipts and pair card changes
-with a matching qualified build. The model twin's license, artifacts, and ownership
-must be reconciled separately before a writer changes it.
+not publisher certification. Causal attention still fails closed.
 
 ## What the historical import showed
 

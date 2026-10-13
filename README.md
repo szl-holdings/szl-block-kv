@@ -50,13 +50,16 @@ Same tokens under a different bundle produce a different key, so the lookup miss
 and the block is recomputed under the regime that asked for it. There is no code
 path that returns a block keyed to another bundle.
 
-The [staged card and publisher plan](hf/README.md) records that the Hub build
-predates this source tree. The current source APIs require a separately
-verified matching build publication; a reachable Hub repo does not establish it.
+The Kernel Hub repo is written only by this repository's `hf-kernel-publish`
+workflow ([publication notes](hf/README.md)): it publishes `torch-ext/szl_block_kv`
+to the `main` and `v1` branches and verifies the served bytes through `get_kernel`.
+The card loads the stable channel with `version=1`; a reachable Hub repo alone does
+not establish that a given build matches a given source commit.
 
 Set `SZL_BLOCK_KV_HF_REVISION` to the immutable **first-class Kernel Hub** commit
 from a verified publication of [`kernels/SZLHOLDINGS/szl-block-kv`](https://huggingface.co/kernels/SZLHOLDINGS/szl-block-kv). Use the `kernels`
-client version qualified with that publication. The GitHub source commit,
+client version qualified with that publication (for example the `v1` branch head,
+whose `SZL_KERNEL_SOURCE.json` names its GitHub source commit). The GitHub source commit,
 model-type mirror commit, and Kernel Hub commit are separate identities.
 An observed head, a branch name, or a successful import does not qualify a release.
 
