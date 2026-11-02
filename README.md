@@ -47,6 +47,11 @@ Valid integer sequences, including integer Tensor token sequences, retain their
 existing keys and cross-regime behavior. Boolean and floating Tensor IDs are
 rejected too.
 
+Table capacities and explicit physical block addresses use the same exact
+integer contract. Invalid addresses raise before changing bindings or receipts,
+including when the token run is already cached. Admission also checks physical
+bounds; `bundle_of` returns `None` for an unknown valid integer address.
+
 `InvariantKeyedBlockTable` makes the governance regime part of the address:
 
 ```
