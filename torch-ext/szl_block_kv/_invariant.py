@@ -98,6 +98,7 @@ class InvariantBundle:
 
 def _validated_token_ids(token_ids: Sequence[int]) -> List[int]:
     """Snapshot integral token identities without lossy numeric/text coercion."""
+    error = "token_ids must contain integers, not booleans, floats or strings"
     ids = []
     for token in token_ids:
         if isinstance(token, Integral) and not isinstance(token, bool):
@@ -114,9 +115,9 @@ def _validated_token_ids(token_ids: Sequence[int]) -> List[int]:
             try:
                 ids.append(operator.index(token))
                 continue
-            except TypeError:
-                pass
-        raise TypeError("token_ids must contain integers, not booleans, floats or strings")
+            except TypeError as exc:
+                raise TypeError(error) from exc
+        raise TypeError(error)
     return ids
 
 
