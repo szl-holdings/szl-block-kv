@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import operator
+from numbers import Integral
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from ._chain import ReceiptChain, _canon, _sha3
@@ -94,6 +96,34 @@ class InvariantBundle:
         return f"InvariantBundle(id={self.short_id}..., fields={sorted(self._fields)})"
 
 
+def _validated_token_ids(token_ids: Sequence[int]) -> List[int]:
+    """Snapshot integral token identities without lossy numeric/text coercion."""
+    error = "token_ids must contain integers, not booleans, floats or strings"
+    ids = []
+    for token in token_ids:
+        if isinstance(token, Integral) and not isinstance(token, bool):
+            try:
+                ids.append(operator.index(token))
+                continue
+            except TypeError as exc:
+                raise TypeError(error) from exc
+        # Integer tokenizer tensors yield scalar Tensor objects, not Integral.
+        # Keep the pure addressing layer usable without Torch, while admitting
+        # its integer-index protocol only for actual non-Boolean tensors.
+        try:
+            import torch
+        except ImportError:
+            torch = None
+        if torch is not None and isinstance(token, torch.Tensor) and token.dtype != torch.bool:
+            try:
+                ids.append(operator.index(token))
+                continue
+            except TypeError as exc:
+                raise TypeError(error) from exc
+        raise TypeError(error)
+    return ids
+
+
 def block_key(token_ids: Sequence[int], bundle: InvariantBundle) -> str:
     """Content address of a KV block under a governance regime.
 
@@ -102,7 +132,7 @@ def block_key(token_ids: Sequence[int], bundle: InvariantBundle) -> str:
     """
     if not isinstance(bundle, InvariantBundle):
         raise TypeError("bundle must be an InvariantBundle")
-    ids: List[int] = [int(t) for t in token_ids]
+    ids = _validated_token_ids(token_ids)
     body = _canon({"v": 1, "tokens": ids, "bundle": bundle.id})
     return hashlib.sha3_256(b"szl.block-kv.invariant-key\x1f" + body).hexdigest()
 
@@ -146,7 +176,7 @@ class InvariantKeyedBlockTable:
     # -------------------------------------------------------------- internals
     @staticmethod
     def _run_digest(token_ids: Sequence[int]) -> str:
-        return _sha3(_canon({"v": 1, "tokens": [int(t) for t in token_ids]}))
+        return _sha3(_canon({"v": 1, "tokens": _validated_token_ids(token_ids)}))
 
     def _emit(self, payload: Dict[str, Any]) -> None:
         if self.chain is not None:
@@ -158,6 +188,7 @@ class InvariantKeyedBlockTable:
 
         outcome is one of "hit", "miss_cold", "miss_cross_regime".
         """
+        token_ids = _validated_token_ids(token_ids)
         key = block_key(token_ids, bundle)
         run = self._run_digest(token_ids)
         physical = self._by_key.get(key)
@@ -196,6 +227,7 @@ class InvariantKeyedBlockTable:
         Returns the physical block index. Evicts the oldest admission when the
         table is full (FIFO in v0 -- no eviction-quality claim is made).
         """
+        token_ids = _validated_token_ids(token_ids)
         key = block_key(token_ids, bundle)
         existing = self._by_key.get(key)
         if existing is not None:
@@ -237,7 +269,7 @@ class InvariantKeyedBlockTable:
             "key": key,
             "run": run,
             "bundle": bundle.id,
-            "n_tokens": len(list(token_ids)),
+            "n_tokens": len(token_ids),
         }
         self._runs.setdefault(run, set()).add(bundle.id)
         self.stats["admitted"] += 1

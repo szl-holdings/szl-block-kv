@@ -40,6 +40,13 @@ a block computed while a permissive invariant bundle was in force can be served 
 a request running under a stricter one, and nothing in the cache layer can see the
 difference.
 
+Token IDs must be integral values (excluding booleans). Floats, including `1.0`,
+and numeric strings are rejected before lookup/admission changes table state or
+emits receipts; they are never truncated or coerced into another token's key.
+Valid integer sequences, including integer Tensor token sequences, retain their
+existing keys and cross-regime behavior. Boolean and floating Tensor IDs are
+rejected too.
+
 `InvariantKeyedBlockTable` makes the governance regime part of the address:
 
 ```
