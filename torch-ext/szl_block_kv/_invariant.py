@@ -124,6 +124,14 @@ def _validated_token_ids(token_ids: Sequence[int]) -> List[int]:
     return ids
 
 
+def _validated_block_index(value: int, name: str) -> int:
+    """Use the same exact integer protocol for capacities and physical addresses."""
+    try:
+        return _validated_token_ids([value])[0]
+    except TypeError as exc:
+        raise TypeError(f"{name} must be an integer, not a boolean, float or string") from exc
+
+
 def block_key(token_ids: Sequence[int], bundle: InvariantBundle) -> str:
     """Content address of a KV block under a governance regime.
 
@@ -153,9 +161,10 @@ class InvariantKeyedBlockTable:
         chain: Optional[ReceiptChain] = None,
         strict: bool = True,
     ) -> None:
+        num_blocks = _validated_block_index(num_blocks, "num_blocks")
         if num_blocks <= 0:
             raise ValueError("num_blocks must be positive")
-        self.num_blocks = int(num_blocks)
+        self.num_blocks = num_blocks
         self.strict = bool(strict)
         self.chain = chain
         self._by_key: Dict[str, int] = {}
@@ -227,6 +236,10 @@ class InvariantKeyedBlockTable:
         Returns the physical block index. Evicts the oldest admission when the
         table is full (FIFO in v0 -- no eviction-quality claim is made).
         """
+        if physical is not None:
+            physical = _validated_block_index(physical, "physical")
+            if not 0 <= physical < self.num_blocks:
+                raise ValueError(f"physical block {physical} out of range")
         token_ids = _validated_token_ids(token_ids)
         key = block_key(token_ids, bundle)
         existing = self._by_key.get(key)
@@ -238,9 +251,6 @@ class InvariantKeyedBlockTable:
                 self._evict_one()
             physical = self._free.pop()
         else:
-            physical = int(physical)
-            if not 0 <= physical < self.num_blocks:
-                raise ValueError(f"physical block {physical} out of range")
             prior = self._meta.get(physical)
             if prior is not None:
                 if self.strict and prior["bundle"] != bundle.id:
@@ -314,7 +324,7 @@ class InvariantKeyedBlockTable:
                     "lambda": "Conjecture 1"})
 
     def bundle_of(self, physical: int) -> Optional[str]:
-        meta = self._meta.get(int(physical))
+        meta = self._meta.get(_validated_block_index(physical, "physical"))
         return meta["bundle"] if meta else None
 
     def regimes_for(self, token_ids: Sequence[int]) -> List[str]:
