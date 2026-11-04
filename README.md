@@ -21,11 +21,11 @@ Doctrine v11. **Λ = Conjecture 1 OPEN** (advisory; uniqueness unproven).
 <!-- SZL-KERNEL-STATUS:import-LIVE:START -->
 ## Status
 
-> **STATUS: import-LIVE** on CPU Kernel Hub `get_kernel` (kernels `0.16.1`). Triton page kernel is **UNAVAILABLE**.
+> **STATUS: import-LIVE** on CPU (`torch_gather` / Kernel Hub `get_kernel`). Triton page kernel is **UNAVAILABLE**.
 
 | Thing | Label | Method / N / date / what-NOT |
 |---|---|---|
-| Kernel Hub `get_kernel` | **import-LIVE** | MEASURED 2026-08-28 2:29pm ET on kernels `0.16.1`. HEAD [`d3ede3e`](https://huggingface.co/kernels/SZLHOLDINGS/szl-block-kv/commit/d3ede3e471b51080492b1c69306283507dcf507e) (`d3ede3e471b51080492b1c69306283507dcf507e`). Legal name `szl-block-kv` (Python module `szl_block_kv`). Variants: `build/torch-universal` (default `get_kernel`) and `build/torch-cpu` (`backend="cpu"`). The historical working calls used the moving `main` branch; one also selected `backend="cpu"`. No immutable-pin rerun is claimed. For a new load use the verified-publication pattern below. `selfcheck` **ok**. `max_abs_vs_contiguous=2.38e-07` (full `2.384185791015625e-07`), `path=torch_gather`, `chain_ok=true`. What-NOT: no tokens/s; no joules. |
+| CPU import / `selfcheck` | **import-LIVE** | Local source-tree import + `selfcheck` ok on 2026-11-04 (HQ; torch 2.14.1; CUDA false). `path=torch_gather`, `chain_ok=true`, `max_abs_vs_contiguous=2.38e-07`. Historical Hub load (2026-08-28, kernels `0.16.1`, HEAD [`d3ede3e`](https://huggingface.co/kernels/SZLHOLDINGS/szl-block-kv/commit/d3ede3e471b51080492b1c69306283507dcf507e)) also import-LIVE; no immutable-pin rerun claimed here. What-NOT: no tokens/s; no joules. |
 | Triton page kernel | **UNAVAILABLE** | Not claimed LIVE. GPU / Triton page kernel is UNAVAILABLE. |
 
 <!-- SZL-KERNEL-STATUS:import-LIVE:END -->
