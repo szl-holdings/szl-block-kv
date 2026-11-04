@@ -53,6 +53,16 @@ sections:
       Doctrine v11. **Λ = Conjecture 1 OPEN** (advisory; uniqueness unproven, not
       proven trust). GitHub is the source; the Hub is a separately observed
       publication target.
+  - heading: Status (honesty)
+    body: |
+      > **STATUS: import-LIVE** on CPU (`torch_gather` / Kernel Hub `get_kernel`).
+      > Triton page kernel is **UNAVAILABLE**. No speedup claim. Credit Stephen Lutar.
+      > Silhouette of PagedAttention (leaders tweak map) — not a vLLM rehost.
+
+      | Thing | Label | Method / what-NOT |
+      |---|---|---|
+      | CPU import / `selfcheck` | **import-LIVE** | Local source-tree import + `selfcheck` ok on 2026-11-04 (HQ; torch 2.14.1; CUDA false). `path=torch_gather`, `chain_ok=true`, `max_abs_vs_contiguous=2.38e-07`. What-NOT: no tokens/s; no joules; not a Hub immutable-pin qualification. |
+      | Triton page kernel | **UNAVAILABLE** | Not claimed LIVE. No cubin and no timed GPU run. |
   - heading: Invariant-keyed blocks
     body: |
       A paged-KV block addressed by its token content alone is reusable by any request
