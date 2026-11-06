@@ -189,3 +189,9 @@ silently return noncausal attention. This is a deliberate fail-closed API
 break, not a causal implementation. Skip CUDA Triton — that kernel is not in v0.
 
 Apache-2.0. Copyright 2026 SZL Holdings.
+
+Estate on Hugging Face: models, datasets and Spaces are published under the [SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS) org.
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE).
