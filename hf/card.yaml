@@ -148,6 +148,13 @@ sections:
       `217e3b24017cd5fadb2525a7b5207f7c89a46413` (Kernel Hub revision
       `54a19796ee2c4f761c9482f77dd1f989a773e17f`, kernels 0.16.1). It establishes no
       independent replay, GPU/Triton qualification, speed, or energy claim.
+  - heading: Card completeness (2026-11-12)
+    body: |-
+      This section adds required card sections the card above did not have. It states only what files in this repository and the estate's own receipt datasets show; nothing here is a new result.
+
+      ### Benchmarks
+
+      Not yet benchmarked. As of 2026-11-12 this repository has no benchmark results (latency, throughput or correctness-vs-reference timings). Published builds: `torch-cpu`, `torch-universal`. No GPU build is published, so no GPU performance claim is made.
 claims:
   - label: REPORTED
     claim: >-
