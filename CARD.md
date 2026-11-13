@@ -157,6 +157,14 @@ reports 92 synthetic conformance tests passed on CPU for GitHub source
 `54a19796ee2c4f761c9482f77dd1f989a773e17f`, kernels 0.16.1). It establishes no
 independent replay, GPU/Triton qualification, speed, or energy claim.
 
+## Card completeness (2026-11-12)
+
+This section adds required card sections the card above did not have. It states only what files in this repository and the estate's own receipt datasets show; nothing here is a new result.
+
+### Benchmarks
+
+Not yet benchmarked. As of 2026-11-12 this repository has no benchmark results (latency, throughput or correctness-vs-reference timings). Published builds: `torch-cpu`, `torch-universal`. No GPU build is published, so no GPU performance claim is made.
+
 ## Evidence record
 
 **REPORTED** — Cross-regime containment. The 14 tests in the [pinned test source](https://github.com/szl-holdings/szl-block-kv/blob/49a96b6386b8ea22db20810c8d96ac0ac7083970/tests/test_invariant.py) cover canonical bundle ids, domain separation against boundary confusion, hit vs cold miss vs cross-regime miss, refusal to rebind a physical block across regimes, no physical block serving two regimes (4 regimes x 3 runs), auditability across FIFO eviction, and receipt-chain depth. This describes test source, not a fresh run result. What-NOT: not a proof about attention arithmetic. (no receipt linked).
