@@ -13,7 +13,7 @@
       ],
       "card": "CARD.md",
       "license_file": "LICENSE",
-      "extra_files": {},
+      "extra_files": { "benchmarks/benchmark.py": "benchmarks/benchmark.py" },
       "prune_paths": [
         "OPERATIONAL.json",
         "BENCH.laptop-blackwell.json",
