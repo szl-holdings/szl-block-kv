@@ -293,5 +293,119 @@ class TwinTests(Fixture):
         self.assertEqual(again["state"], "NO_CHANGES")
 
 
+
+class SignedConsumerTests(Fixture):
+    """Exercise the complete pre-import gate with an offline Hub and loader doubles."""
+
+    def setUp(self):
+        super().setUp()
+        from contextlib import ExitStack
+        from types import SimpleNamespace
+        from unittest.mock import Mock, patch
+
+        self.patches = ExitStack()
+        self.addCleanup(self.patches.close)
+        self.patches.enter_context(patch.dict(os.environ))
+        os.environ.pop("LOCAL_KERNELS", None)
+        self.cfg_obj = self.cfg()
+        self.pinned = "a" * 40
+        self.snapshot = self.tmp / "snapshots" / self.pinned
+        self.payload = kp.build_payload(self.cfg_obj, self.src, self.commit)
+        for variant in kp.VARIANTS:
+            self.payload[f"build/{variant}/{kp.SIGNATURE_NAME}"] = b"fixture-bundle"
+        kp.write_dist(self.payload, self.snapshot)
+        g(self.src, "update-ref", "refs/remotes/origin/main", self.commit)
+        self.api = Mock()
+        self.api.list_repo_refs.return_value = SimpleNamespace(
+            branches=[SimpleNamespace(name=name, target_commit=self.pinned) for name in ("main", "v1")])
+        self.api.list_repo_files.return_value = list(self.payload)
+        self.api.snapshot_download.return_value = str(self.snapshot)
+        self.selected = self.snapshot / "build" / "torch-cpu"
+        self.loader = Mock()
+        self.loader.__version__ = "0.18.3"
+        self.loader.install_kernel.return_value = self.selected
+        self.loader.get_kernel.return_value = SimpleNamespace(__file__=str(self.selected / "szl_demo/__init__.py"))
+        self.loader.get_local_kernel.return_value = SimpleNamespace()
+        decision = type("VariantAccepted", (), {"variant": SimpleNamespace(variant_str="torch-universal")})()
+        self.loader.get_kernel_variants.return_value = [decision]
+        self.events = []
+        def verify_metadata(meta, repo, workflow):
+            self.assertEqual(repo, self.cfg_obj.source_repository)
+            self.assertEqual(workflow, "hf-kernel-publish.yml")
+            self.assertEqual(meta.name, "metadata.json")
+            self.assertEqual(meta.parent.parent, self.snapshot / "build")
+            self.events.append(meta.parent.name)
+            return {"state": "VERIFIED", "identity": "test-double"}
+        self.check = Mock(side_effect=verify_metadata)
+        modules = {"huggingface_hub": SimpleNamespace(HfApi=lambda: self.api),
+                   "kernels": self.loader,
+                   "szl_verify_signatures": SimpleNamespace(verify_variant=self.check)}
+        self.patches.enter_context(patch.dict(sys.modules, modules))
+        self.digest = self.patches.enter_context(patch.object(kp, "kernels_digest_check", return_value="PASS"))
+
+    def verify(self, ref="version", release=None):
+        return kp.verify_hub(self.cfg_obj, self.src, self.commit, ref, "main", release)
+
+    def assert_rejected_before_load(self):
+        with self.assertRaises(kp.PublishError):
+            self.verify()
+        self.loader.get_kernel.assert_not_called()
+        self.loader.get_local_kernel.assert_not_called()
+
+    def test_version_alias_verified_before_pinned_load(self):
+        def resolve(*args, **kwargs):
+            self.assertEqual(self.events, list(kp.VARIANTS))
+            return self.selected
+        self.loader.install_kernel.side_effect = resolve
+        report = self.verify(release=self.commit)
+        self.loader.install_kernel.assert_called_once_with(self.cfg_obj.repo_id, version=1,
+                                                          trust_remote_code=[self.cfg_obj.repo_id])
+        self.loader.get_kernel.assert_called_once_with(self.cfg_obj.repo_id, revision=self.pinned,
+                                                      trust_remote_code=[self.cfg_obj.repo_id])
+        self.assertEqual(report["state"], "PASS")
+        self.assertEqual(report["release_checked"], self.commit)
+        self.assertEqual(report["alias_resolution"]["hub_commit"], self.pinned)
+        self.assertEqual(report["variants"]["torch-universal"]["signature"]["state"], "VERIFIED")
+
+    def test_main_alias_also_resolves_before_pinned_load(self):
+        self.verify("main")
+        self.loader.install_kernel.assert_called_once_with(self.cfg_obj.repo_id, revision="main",
+                                                          trust_remote_code=[self.cfg_obj.repo_id])
+        self.loader.get_kernel.assert_called_once_with(self.cfg_obj.repo_id, revision=self.pinned,
+                                                      trust_remote_code=[self.cfg_obj.repo_id])
+
+    def test_missing_sidecar_or_unexpected_build_path(self):
+        for remote in ([p for p in self.payload if p != f"build/torch-cpu/{kp.SIGNATURE_NAME}"],
+                       [*self.payload, "build/torch-cpu/unmanaged.txt"]):
+            with self.subTest(remote=remote):
+                self.api.list_repo_files.return_value = remote
+                self.assert_rejected_before_load()
+                self.loader.install_kernel.assert_not_called()
+
+    def test_unsigned_and_invalid_signatures(self):
+        self.check.side_effect = None
+        self.check.return_value = {"state": "UNSIGNED"}
+        self.assert_rejected_before_load()
+        self.check.side_effect = ValueError("invalid signature")
+        self.assert_rejected_before_load()
+        self.loader.install_kernel.assert_not_called()
+
+    def test_moved_alias_and_local_override(self):
+        self.loader.install_kernel.return_value = self.tmp / ("b" * 40) / "build/torch-cpu"
+        self.assert_rejected_before_load()
+        self.loader.install_kernel.reset_mock()
+        os.environ["LOCAL_KERNELS"] = "fixture"
+        self.assert_rejected_before_load()
+        self.loader.install_kernel.assert_not_called()
+
+    def test_skipped_digest_rejected(self):
+        self.digest.return_value = "SKIPPED"
+        self.assert_rejected_before_load()
+
+    def test_changed_variant_bytes_rejected(self):
+        (self.snapshot / "build/torch-universal/szl_demo/_ops.py").write_text("fixture change")
+        self.assert_rejected_before_load()
+
+
 if __name__ == "__main__":
     unittest.main()

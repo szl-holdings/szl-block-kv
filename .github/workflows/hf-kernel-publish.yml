@@ -282,8 +282,8 @@ jobs:
       - name: Fresh consumer environment (CPU torch + kernels==${{ env.KERNELS_VERSION }})
         run: |
           python -m pip install --disable-pip-version-check --index-url "$TORCH_INDEX" "torch==${TORCH_VERSION}"
-          python -m pip install --disable-pip-version-check "kernels==${KERNELS_VERSION}"
-      - name: get_kernel(version=${{ matrix.kernel.version }}) serves the GitHub source
+          python -m pip install --disable-pip-version-check "kernels==${KERNELS_VERSION}" "sigstore==4.5.1"
+      - name: Verify v${{ matrix.kernel.version }} resolution and load the signed immutable source
         env:
           KERNELS_CACHE: ${{ runner.temp }}/kcache-version
         run: |
@@ -291,7 +291,7 @@ jobs:
           if [ "$MODE" = "drift" ]; then src=auto; rel=(--release-sha "$SOURCE_SHA"); else src="$SOURCE_SHA"; rel=(); fi
           python scripts/szl_kernel_publish.py verify --kernel "$KERNEL" --ref version --source "$src" \
             --default-branch "$DEFAULT_BRANCH" "${rel[@]}" --receipt "receipts/verify-version-${{ matrix.kernel.slug }}.json"
-      - name: get_kernel(revision="main") serves the same source
+      - name: Verify main resolution and load the signed immutable source
         env:
           KERNELS_CACHE: ${{ runner.temp }}/kcache-main
         run: |
