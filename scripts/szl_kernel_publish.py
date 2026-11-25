@@ -878,6 +878,8 @@ def verify_hub(cfg: KernelConfig, repo_root: Path, source: str, ref: str, defaul
     if branch not in heads:
         raise PublishError(f"{cfg.repo_id}: branch {branch} does not exist on the kernel repo")
     hub_commit = heads[branch]
+    if not isinstance(hub_commit, str) or not SHA40.fullmatch(hub_commit):
+        raise PublishError(f"{branch}: invalid Hub commit {hub_commit!r}")
     report: dict[str, Any] = {"schema": "szl.kernel-hub-verification/v1", "repo_id": cfg.repo_id,
                               "repo_type": "kernel", "ref": branch, "hub_commit": hub_commit,
                               "kernels_version": kernels.__version__}
@@ -894,28 +896,11 @@ def verify_hub(cfg: KernelConfig, repo_root: Path, source: str, ref: str, defaul
     report["source_commit"] = source
     payload = build_payload(cfg, repo_root, source)
 
-    # 1. The call consumers make, in a fresh cache.
-    kwargs = {"revision": "main"} if branch == "main" else {"version": cfg.version}
-    module = kernels.get_kernel(cfg.repo_id, trust_remote_code=[cfg.repo_id], **kwargs)
-    served = Path(module.__file__)  # snapshot path; do not resolve the blob symlinks
-    variant_root = served.parent.parent
-    if (served.parent.name != cfg.packages[0].name or variant_root.parent.name != "build"
-            or variant_root.parent.parent.name != hub_commit):
-        raise PublishError(f"get_kernel loaded {served}, not build/<variant>/{cfg.packages[0].name} "
-                           f"of {branch}@{hub_commit}")
-    loaded_variant = variant_root.name
-    compare_variant(variant_root, loaded_variant, payload)
-    smoke = load_smoke(cfg, repo_root, source)
-    report["get_kernel"] = {"call": f"get_kernel({cfg.repo_id!r}, {', '.join(f'{k}={v!r}' for k, v in kwargs.items())}, "
-                                    "trust_remote_code=True)",
-                            "variant": loaded_variant, **run_smoke(module, smoke, f"get_kernel {branch}")}
-    allow = kernels.get_kernel(cfg.repo_id, trust_remote_code=[cfg.repo_id], **kwargs)
-    report["get_kernel"]["allowlist_form"] = "PASS" if allow is not None else "FAIL"
-
-    # 2. Every managed Hub path, both variants, and nothing stale under build/.
+    # The publisher adds one detached bundle per variant after building from Git.
     remote = set(api.list_repo_files(cfg.repo_id, repo_type="kernel", revision=hub_commit))
     build_remote = {p for p in remote if p.startswith("build/")}
     build_expected = {p for p in payload if p.startswith("build/")}
+    build_expected.update(f"build/{variant}/{SIGNATURE_NAME}" for variant in VARIANTS)
     if build_remote != build_expected:
         raise PublishError(f"{branch}: build/ differs from GitHub source: extra={sorted(build_remote - build_expected)} "
                            f"missing={sorted(build_expected - build_remote)}")
@@ -925,12 +910,24 @@ def verify_hub(cfg: KernelConfig, repo_root: Path, source: str, ref: str, defaul
     snapshot = Path(api.snapshot_download(cfg.repo_id, repo_type="kernel", revision=hub_commit,
                                           allow_patterns=["build/*", *sorted(cfg.managed_files())],
                                           cache_dir=os.environ.get("KERNELS_CACHE")))
+    if snapshot.name != hub_commit:
+        raise PublishError(f"Hub snapshot {snapshot} does not match {hub_commit}")
+    from szl_verify_signatures import verify_variant
+
     report["variants"] = {}
     for variant in VARIANTS:
-        compare_variant(snapshot / "build" / variant, variant, payload)
-        report["variants"][variant] = {"bytes": "MATCH", "digest": kernels_digest_check(snapshot / "build" / variant)}
-    universal = kernels.get_local_kernel(snapshot / "build" / "torch-universal")
-    report["variants"]["torch-universal"].update(run_smoke(universal, smoke, f"{branch} torch-universal"))
+        root = snapshot / "build" / variant
+        try:
+            signature = verify_variant(root / "metadata.json", cfg.source_repository, "hf-kernel-publish.yml")
+        except Exception as exc:
+            raise PublishError(f"{branch}: {variant} signature verification failed: {exc}") from exc
+        if signature["state"] != "VERIFIED":
+            raise PublishError(f"{branch}: {variant} metadata signature is {signature['state']}")
+        compare_variant(root, variant, payload)
+        digest = kernels_digest_check(root)
+        if digest != "PASS":
+            raise PublishError(f"{branch}: {variant} digest was not verified: {digest}")
+        report["variants"][variant] = {"bytes": "MATCH", "digest": digest, "signature": signature}
     for path in sorted(cfg.managed_files()):
         got = (snapshot / path).read_bytes() if (snapshot / path).is_file() else None
         if got is None:
@@ -943,8 +940,8 @@ def verify_hub(cfg: KernelConfig, repo_root: Path, source: str, ref: str, defaul
     if "README.md" in payload:
         lint_card(cfg, payload["README.md"].decode("utf-8"), "kernel README.md", require_usage=True)
 
-    # 3. What the resolver decides on this host (CPU runner: torch-cpu preferred, universal compatible).
-    decisions = kernels.get_kernel_variants(cfg.repo_id, **kwargs)
+    # What the resolver decides on this host (CPU runner: torch-cpu preferred, universal compatible).
+    decisions = kernels.get_kernel_variants(cfg.repo_id, revision=hub_commit)
     report["variant_decisions"] = [
         {"variant": d.variant.variant_str, "accepted": type(d).__name__ == "VariantAccepted",
          "reason": getattr(d, "reason", None)} for d in decisions]
@@ -952,13 +949,33 @@ def verify_hub(cfg: KernelConfig, repo_root: Path, source: str, ref: str, defaul
     if "torch-universal" not in accepted:
         raise PublishError(f"{branch}: torch-universal is not accepted by the resolver: {report['variant_decisions']}")
 
-    # 4. Drift guard: a newer release whose kernel content was never published.
+    # Drift guard: a newer release whose kernel content was never published.
     if release_sha:
         release_sha = resolve_commit(repo_root, release_sha)
         if content_key(build_payload(cfg, repo_root, release_sha)) != content_key(payload):
             raise PublishError(f"SOURCE_AHEAD: release {release_sha[:12]} changes the kernel but {branch} serves "
                                f"{source[:12]}; dispatch hf-kernel-publish to publish it")
         report["release_checked"] = release_sha
+    # Resolve the requested consumer alias without executing it. Only import the pinned
+    # revision after the selected directory and both variants have passed the checks.
+    if "LOCAL_KERNELS" in os.environ:
+        raise PublishError("LOCAL_KERNELS overrides are not permitted during Hub verification")
+    alias = {"revision": "main"} if branch == "main" else {"version": cfg.version}
+    selected = kernels.install_kernel(cfg.repo_id, trust_remote_code=[cfg.repo_id], **alias)
+    if selected.name not in VARIANTS or selected != snapshot / "build" / selected.name:
+        raise PublishError(f"{branch}: consumer selected {selected}, outside the verified snapshot {snapshot}")
+    report["alias_resolution"] = {**alias, "variant": selected.name, "hub_commit": hub_commit}
+    module = kernels.get_kernel(cfg.repo_id, revision=hub_commit, trust_remote_code=[cfg.repo_id])
+    served = Path(module.__file__)  # Keep snapshot paths; individual files may be cache symlinks.
+    if served.parent != selected / cfg.packages[0].name:
+        raise PublishError(f"{branch}: pinned loader imported {served}, expected {selected / cfg.packages[0].name}")
+    smoke = load_smoke(cfg, repo_root, source)
+    report["get_kernel"] = {"call": f"get_kernel({cfg.repo_id!r}, revision={hub_commit!r}, "
+                                    f"trust_remote_code={[cfg.repo_id]!r})",
+                            "variant": selected.name, "allowlist_form": "PASS",
+                            **run_smoke(module, smoke, f"get_kernel {branch}@{hub_commit}")}
+    universal = kernels.get_local_kernel(snapshot / "build" / "torch-universal")
+    report["variants"]["torch-universal"].update(run_smoke(universal, smoke, f"{branch} torch-universal"))
     report["state"] = "PASS"
     return report
 
